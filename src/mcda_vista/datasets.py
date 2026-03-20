@@ -39,7 +39,7 @@ def augment_random(
         Augmented dataset with shape ``(m + n_points, n)``.
     """
     if n_points <= 0:
-        return dataset.copy()
+        return dataset.copy()  # type: ignore[no-any-return]
 
     rng = np.random.default_rng(seed)
     n_criteria = dataset.shape[1]
@@ -86,7 +86,7 @@ def augment_regular_grid(
         )
 
     if any(s <= 0 for s in grid_shape):
-        return dataset.copy()
+        return dataset.copy()  # type: ignore[no-any-return]
 
     axes = [
         np.arange(1, s + 1) / (s + 1) for s in grid_shape
