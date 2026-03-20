@@ -4,7 +4,6 @@ from pyDecision.algorithm import saw_method
 
 from mcda_vista.converters import relation_from_aggregates
 from mcda_vista.methods import handle_pydecision_warnings, register_method
-from mcda_vista.relation import Relation
 
 
 @register_method("saw")

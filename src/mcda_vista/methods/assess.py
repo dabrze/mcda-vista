@@ -18,7 +18,7 @@ from typing import Any
 import numpy as np
 
 from mcda_vista.converters import relation_from_aggregates
-from mcda_vista.methods import register_method, handle_pydecision_warnings
+from mcda_vista.methods import register_method
 from mcda_vista.relation import Relation
 from mcda_vista.value_functions import (
     Breakpoints,

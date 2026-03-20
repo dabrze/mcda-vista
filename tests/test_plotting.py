@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 
 from mcda_vista.core import VistaResult
 from mcda_vista.plotting import plot_vista, plot_vista_comparison
-from mcda_vista.relation import Relation
 
 
 @pytest.fixture
