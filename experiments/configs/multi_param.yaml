@@ -1,0 +1,27 @@
+experiment: multi_param
+description: "Method-specific parameter sweeps"
+resolution: 101
+n_criteria: 2
+reference: [0.5, 0.5]
+weights: [1.0, 1.0]
+method_sweeps:
+  saw:
+    sweep: {delta: [0.00, 0.05, 0.10, 0.15, 0.20]}
+  topsis:
+    sweep: {delta: [0.00, 0.05, 0.10, 0.15, 0.20]}
+  etopsis:
+    sweep: {delta: [0.00, 0.10, 0.20], epsilon: [0.67, 1.00, 1.50]}
+    base: {aggregation: "R"}
+  oreste:
+    sweep: {alpha: [0.30, 0.35, 0.40, 0.45, 0.50]}
+  promethee_i:
+    sweep: {q: [0.00, 0.10, 0.20], p: [0.00, 0.10, 0.20]}
+    base: {f: "t4", s: 0.0}
+  electre_iii:
+    sweep: {q: [0.00, 0.10, 0.20], p: [0.00, 0.10, 0.20]}
+    base: {v: 1.00, alpha: -0.15, beta: 0.30}
+  electre_iiic:
+    sweep: {q: [0.00, 0.10, 0.20], p: [0.00, 0.10, 0.20]}
+    base: {v: 1.00, lamb: 0.60}
+  vikor:
+    sweep: {v: [0.00, 0.25, 0.50, 0.75, 1.00]}

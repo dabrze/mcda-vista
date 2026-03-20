@@ -1,0 +1,188 @@
+# VISTA — VISualization of relation Topologies of Alternatives
+
+[![CI](https://github.com/dabrze/mcda-vista/actions/workflows/ci.yml/badge.svg)](https://github.com/dabrze/mcda-vista/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/mcda-vista)](https://pypi.org/project/mcda-vista/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
+## Overview
+
+![VISTA overview](docs/VISTA_overview.png)
+
+**VISTA** is a visualization framework for Multi-Criteria Decision
+Analysis (MCDA) ranking methods. For a given ranking method it sweeps a *test*
+alternative across a 2-D criteria space and classifies every point by
+its pairwise relation to a fixed *reference* alternative:
+
+| Symbol | Relation         | Meaning                                              |
+| ------ | ---------------- | ---------------------------------------------------- |
+| P+     | **Better**       | The test alternative is preferred over the reference |
+| I      | **Indifferent**  | The method cannot distinguish the two alternatives   |
+| P−     | **Worse**        | The reference alternative is preferred               |
+| R      | **Incomparable** | The method cannot order the two alternatives         |
+
+The resulting colour-coded map reveals decision boundaries and structural differences between MCDA ranking methods at a glance.
+
+---
+
+## Installation
+
+```bash
+pip install mcda-vista
+```
+
+To include the interactive Streamlit dashboard:
+
+```bash
+pip install mcda-vista[app]
+```
+
+For development (linting, type-checking, tests):
+
+```bash
+pip install -e ".[dev]"
+```
+
+---
+
+## Quick Start
+
+```python
+from mcda_vista import generate_vista, plot_vista
+
+result = generate_vista("topsis", resolution=101, delta=0.10)
+fig = plot_vista(result, xlabel="Criterion 1", ylabel="Criterion 2")
+fig.savefig("my_first_vista.png", dpi=300)
+```
+
+`generate_vista` sweeps a 101 × 101 grid over the unit square, evaluates
+TOPSIS at every point, and returns a `VistaResult` dataclass. `plot_vista`
+renders it as a scatter plot coloured by the relation type.
+
+---
+
+## Available Ranking Methods
+
+The package works with pyDecision's built-in methods and any custom method that follows the expected interface. The following methods are registered by default:
+
+| Key             | Display Name  | Key Parameters                                                 |
+| --------------- | ------------- | -------------------------------------------------------------- |
+| `saw`           | SAW           | `delta` — indifference threshold (default 0.1)                 |
+| `topsis`        | TOPSIS        | `delta` — indifference threshold (default 0.1)                 |
+| `vikor`         | VIKOR         | `v` — strategy coefficient (default 0.5)                       |
+| `macbeth`       | MACBETH       | `delta` — indifference threshold (default 0.1)                 |
+| `borda`         | Borda         | *(parameter-free)*                                             |
+| `oreste`        | ORESTE        | `alpha` — alpha threshold (default 0.4)                        |
+| `spotis`        | SPOTIS        | `delta` — indifference threshold (default 0.1)                 |
+| `etopsis`       | E-TOPSIS      | `aggregation` (A/I/R), `epsilon`, `delta`                      |
+| `uta`           | UTA           | `k` — breakpoints, `form` (L/X/V/S), `delta`                   |
+| `assess`        | ASSESS        | `k` — breakpoints, `form` (L/X/V/S), `delta`                   |
+| `electre_iii`   | ELECTRE III   | `q`, `p`, `v` — thresholds; `alpha`, `beta` — cut-level        |
+| `electre_iiic`  | ELECTRE IIIc  | `q`, `p`, `v` — thresholds; `lamb` — credibility cutting level |
+| `promethee_i`   | PROMETHEE I   | `f` (t1–t7) — preference function; `q`, `p`, `s`               |
+| `promethee_ii`  | PROMETHEE II  | `f` (t1–t7), `q`, `p`, `s`, `delta`                            |
+| `promethee_iii` | PROMETHEE III | `f` (t1–t7), `q`, `p`, `s`, `lmbd` — interval width            |
+| `regime`        | REGIME        | *(parameter-free)*                                             |
+
+List registered methods programmatically:
+
+```python
+from mcda_vista.methods import list_methods
+print(list_methods())
+```
+
+---
+
+## Custom Methods
+
+You can pass any callable that accepts a dataset, weights, and keyword
+parameters and returns a `Relation`:
+
+```python
+from mcda_vista import generate_vista, plot_vista, Relation
+import numpy as np
+
+def my_method(dataset, weights, **params):
+    # dataset[0] = reference, dataset[1] = test point
+    score_ref = np.dot(dataset[0], weights)
+    score_test = np.dot(dataset[1], weights)
+    delta = params.get("delta", 0.05)
+    if abs(score_ref - score_test) < delta:
+        return Relation.INDIFFERENT
+    return Relation.BETTER if score_test > score_ref else Relation.WORSE
+
+result = generate_vista(my_method, resolution=101, delta=0.05)
+fig = plot_vista(result)
+fig.savefig("custom_method.png", dpi=300)
+```
+
+---
+
+## Experiments
+
+Reproducible experiments are configured via YAML files stored in
+`experiments/configs/`. Each config specifies the method, parameter
+ranges, resolution, and output paths. To run an experiment:
+
+```bash
+python -m mcda_vista.experiments.run experiments/configs/my_experiment.yaml
+```
+
+Results (CSV grids + metadata JSON) are written to the configured output
+directory and can be reloaded with `load_vista()`.
+
+---
+
+## Dashboard
+
+The optional Streamlit dashboard provides an interactive UI for exploring
+VISTA maps in real time:
+
+```bash
+mcda-vista-app
+```
+
+<!-- ![Dashboard screenshot](docs/dashboard_screenshot.png) -->
+
+Select a method, adjust parameters with sliders, and watch the VISTA map
+update live. Install the dashboard extra to enable it:
+
+```bash
+pip install mcda-vista[app]
+```
+
+---
+
+## API Overview
+
+| Module                  | Purpose                                                        |
+| ----------------------- | -------------------------------------------------------------- |
+| `mcda_vista.core`       | `generate_vista()`, `VistaGenerator`, `VistaResult`            |
+| `mcda_vista.methods`    | Method registry — `get_method()`, `list_methods()`             |
+| `mcda_vista.relation`   | `Relation` enum (Better, Worse, Indifferent, Incomparable)     |
+| `mcda_vista.plotting`   | `plot_vista()`, `plot_vista_grid()`, `plot_vista_comparison()` |
+| `mcda_vista.io`         | `save_vista()`, `load_vista()`                                 |
+| `mcda_vista.converters` | Score-to-relation conversion utilities                         |
+| `mcda_vista.datasets`   | Dataset helpers for grid construction                          |
+
+---
+
+## Example VISTA Grid
+
+![Parameter sweep](docs/parameters_plot.png)
+
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+---
+
+<!-- ## Citation
+
+If you use VISTA in your research, please cite:
+
+```bibtex
+TODO: Add citation
+``` -->

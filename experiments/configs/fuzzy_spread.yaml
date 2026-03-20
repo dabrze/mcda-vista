@@ -1,0 +1,24 @@
+experiment: fuzzy_spread
+description: "Effect of fuzzification spread on Fuzzy TOPSIS VISTA topology"
+resolution: 51
+n_criteria: 2
+reference: [0.5, 0.5]
+weights: [1.0, 1.0]
+delta: 0.10
+methods:
+  fuzzy_topsis:
+    spreads: [0.0, 0.10, 0.20, 0.30, 0.40, 0.50]
+    skews: [0.0]
+  fuzzy_vikor:
+    spreads: [0.30]
+    skews: [0.0]
+  fuzzy_moora:
+    spreads: [0.30]
+    skews: [0.0]
+  fuzzy_waspas:
+    spreads: [0.30]
+    skews: [0.0]
+skew_experiment:
+  method: fuzzy_topsis
+  spread: 0.30
+  skews: [-1.0, -0.5, 0.0, 0.5, 1.0]

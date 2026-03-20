@@ -1,0 +1,2 @@
+[console_scripts]
+mcda-vista-app = mcda_vista.app.dashboard:main

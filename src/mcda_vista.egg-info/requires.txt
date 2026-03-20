@@ -1,0 +1,13 @@
+numpy
+pyDecision
+matplotlib
+pyyaml
+tqdm
+
+[app]
+streamlit>=1.20
+
+[dev]
+pytest
+ruff
+mypy

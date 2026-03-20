@@ -1,0 +1,21 @@
+experiment: weights_sweep
+description: "Influence of criteria weights on VISTAs"
+resolution: 101
+n_criteria: 2
+reference: [0.5, 0.5]
+sweep:
+  weights:
+    - [0.25, 0.75]
+    - [0.25, 0.50]
+    - [0.50, 0.50]
+    - [0.50, 0.25]
+    - [0.75, 0.25]
+methods:
+  saw: {delta: 0.10}
+  topsis: {delta: 0.10}
+  etopsis: {aggregation: "R", epsilon: 1.0, delta: 0.10}
+  oreste: {alpha: 0.40}
+  promethee_i: {f: "t4", q: 0.10, p: 0.20, s: 0.0}
+  regime: {}
+  electre_iii: {q: 0.10, p: 0.20, v: 1.00, alpha: -0.15, beta: 0.30}
+  electre_iiic: {q: 0.10, p: 0.20, v: 1.00, lamb: 0.60}
