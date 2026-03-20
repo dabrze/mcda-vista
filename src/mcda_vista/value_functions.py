@@ -171,13 +171,13 @@ def generate_values_from_01(
         v = (
             [0.0]
             + [
-                1 / (1 + np.exp(-(j / (K - 1) - 0.5) * form[1]))
+                1 / (1 + np.exp(-(j / (K - 1) - 0.5) * float(form[1])))
                 for j in range(1, K - 1)
             ]
             + [1.0]
         )
     elif form[0] == "P":
-        v = [(j / (K - 1)) ** form[1] for j in range(K)]
+        v = [(j / (K - 1)) ** float(form[1]) for j in range(K)]
 
     return v
 

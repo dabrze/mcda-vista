@@ -30,7 +30,7 @@ from __future__ import annotations
 
 import functools
 import warnings
-from typing import Any
+from typing import Any, Callable
 
 import numpy as np
 
@@ -155,7 +155,9 @@ def fuzzify_weights(
 # ---------------------------------------------------------------------------
 
 
-def _handle_warnings(func):
+def _handle_warnings(
+    func: Callable[..., Relation],
+) -> Callable[..., Relation]:
     """Catch RuntimeWarning from pyDecision and return Relation.ERROR."""
 
     @functools.wraps(func)

@@ -11,13 +11,15 @@ from __future__ import annotations
 
 import io
 import time
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
 import streamlit as st
 
-from mcda_vista.core import generate_vista
+from mcda_vista.core import VistaResult, generate_vista
 from mcda_vista.methods import get_method, list_methods
+from mcda_vista.methods.base import MethodAdapter
 from mcda_vista.plotting import plot_vista, plot_vista_comparison
 from mcda_vista.relation import Relation
 
@@ -32,13 +34,13 @@ def _hashable_params(**kwargs: object) -> tuple[tuple[str, object], ...]:
 
 
 def _render_method_params(
-    adapter: object,
+    adapter: MethodAdapter,
     key_prefix: str = "",
-) -> dict[str, object]:
+) -> dict[str, Any]:
     """Auto-generate sidebar widgets from a method's ``param_space()``."""
     space = adapter.param_space()
     defaults = adapter.default_params()
-    params: dict[str, object] = {}
+    params: dict[str, Any] = {}
 
     if not space:
         st.caption("_No tuneable parameters for this method._")
@@ -82,7 +84,7 @@ def _fig_to_png_bytes(fig: plt.Figure) -> bytes:
     return buf.getvalue()
 
 
-def _result_to_csv(result: object) -> str:
+def _result_to_csv(result: VistaResult) -> str:
     """Convert a VistaResult to CSV text."""
     header_parts = [
         f"c{i + 1}" for i in range(result.grid.shape[1])
@@ -263,7 +265,7 @@ def main() -> None:
 
         st.subheader(f"Comparing {len(compare_methods)} methods")
 
-        results: list[object] = []
+        results: list[VistaResult] = []
         progress_bar = st.progress(0, text="Generating VISTAs…")
         for i, mname in enumerate(compare_methods):
             m_adapter = get_method(mname)

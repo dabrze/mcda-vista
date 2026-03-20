@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import functools
 import warnings
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, Callable, Protocol, runtime_checkable
 
 import numpy as np
 
@@ -87,7 +87,9 @@ class MethodAdapter(Protocol):
 # ---------------------------------------------------------------------------
 
 
-def handle_pydecision_warnings(func):
+def handle_pydecision_warnings(
+    func: Callable[..., Relation],
+) -> Callable[..., Relation]:
     """Decorator that catches ``RuntimeWarning`` from pyDecision.
 
     If any :class:`RuntimeWarning` is emitted during the wrapped call the

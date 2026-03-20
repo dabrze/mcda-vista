@@ -6,7 +6,7 @@ matching the original colour scheme and layout conventions.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Sequence
+from typing import TYPE_CHECKING, Sequence, cast
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -210,7 +210,7 @@ def plot_vista(
     if ax is None:
         fig, ax = plt.subplots(figsize=(5, 5))
     else:
-        fig = ax.get_figure()
+        fig = cast(Figure, ax.get_figure())
 
     _draw_vista_on_ax(ax, result, point_size=point_size, show_reference=show_reference)
 
