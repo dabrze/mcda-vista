@@ -118,6 +118,34 @@ fig.savefig("custom_method.png", dpi=300)
 
 ---
 
+## Protocol Check
+
+![Protocol report for TOPSIS](docs/protocol_report.png)
+
+The VISTA protocol is a systematic six-check evaluation that assesses whether a ranking method meets the decision maker's expectations:
+
+1. **Dominance relation** — no violations in dominating/dominated cones
+2. **Self-indifference** — identical alternatives are indifferent
+3. **Diagonal preference change** — at most one transition along the diagonal
+4. **Radial preference change** — at most one transition along any ray
+5. **Preference ratio** — balanced Better/Worse ratio
+6. **Third alternative stability** — VISTA is stable when a third alternative is added
+
+```python
+from mcda_vista.protocol import run_protocol, plot_protocol_report
+
+report = run_protocol("topsis", resolution=101, delta=0.10)
+print(report.summary())
+fig = plot_protocol_report(report)
+fig.savefig("protocol_report.png", dpi=300)
+```
+
+The protocol uses equal weights and the midpoint as reference by default.
+Optionally pass `extra_weights` to test weight sensitivity.
+See [`notebooks/12_protocol_check.ipynb`](notebooks/12_protocol_check.ipynb) for a full walkthrough with Fuzzy TOPSIS.
+
+---
+
 ## Experiments
 
 Reproducible experiments are configured via YAML files stored in
@@ -161,6 +189,7 @@ pip install mcda-vista[app]
 | `mcda_vista.methods`    | Method registry — `get_method()`, `list_methods()`             |
 | `mcda_vista.relation`   | `Relation` enum (Better, Worse, Indifferent, Incomparable)     |
 | `mcda_vista.plotting`   | `plot_vista()`, `plot_vista_grid()`, `plot_vista_comparison()` |
+| `mcda_vista.protocol`   | `run_protocol()`, `plot_protocol_report()`, six check functions|
 | `mcda_vista.io`         | `save_vista()`, `load_vista()`                                 |
 | `mcda_vista.converters` | Score-to-relation conversion utilities                         |
 | `mcda_vista.datasets`   | Dataset helpers for grid construction                          |
