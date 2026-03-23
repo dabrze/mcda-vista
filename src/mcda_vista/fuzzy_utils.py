@@ -45,6 +45,8 @@ __all__ = [
     "fuzzy_vikor",
     "fuzzy_moora",
     "fuzzy_waspas",
+    "fuzzy_edas",
+    "fuzzy_copras",
 ]
 
 
@@ -218,7 +220,7 @@ def fuzzy_topsis(
     f_weights = fuzzify_weights(weights, weight_spread if weight_spread is not None else spread, skew)
     c_types = ["max"] * n
 
-    scores = fuzzy_topsis_method(f_dataset, f_weights, c_types, graph=False, verbose=False)
+    scores = fuzzy_topsis_method(dataset=f_dataset, weights=f_weights, criterion_type=c_types, graph=False, verbose=False)
     return relation_from_aggregates(scores[0], scores[1], delta)
 
 
@@ -251,7 +253,7 @@ def fuzzy_vikor(
         # often zero with only 2 alternatives — suppress that specific warning.
         warnings.filterwarnings("ignore", message="invalid value", category=RuntimeWarning)
         result = fuzzy_vikor_method(
-            f_dataset, f_weights, c_types,
+            dataset=f_dataset, weights=f_weights, criterion_type=c_types,
             strategy_coefficient=v, graph=False, verbose=False,
         )
 
@@ -291,7 +293,7 @@ def fuzzy_moora(
     f_weights = fuzzify_weights(weights, weight_spread if weight_spread is not None else spread, skew)
     c_types = ["max"] * n
 
-    scores = fuzzy_moora_method(f_dataset, f_weights, c_types, graph=False, verbose=False)
+    scores = fuzzy_moora_method(dataset=f_dataset, weights=f_weights, criterion_type=c_types, graph=False, verbose=False)
     return relation_from_aggregates(scores[0], scores[1], delta)
 
 
@@ -317,8 +319,61 @@ def fuzzy_waspas(
     f_weights = fuzzify_weights(weights, weight_spread if weight_spread is not None else spread, skew)
     c_types = ["max"] * n
 
-    # fuzzy_waspas_method has different arg order: (dataset, criterion_type, weights, ...)
-    result = fuzzy_waspas_method(f_dataset, c_types, f_weights, graph=False)
+    result = fuzzy_waspas_method(dataset=f_dataset, criterion_type=c_types, weights=f_weights, graph=False)
     # Returns (f_wsm, f_wpm, f_waspas) — use the combined WASPAS scores
     waspas_scores = result[2]
     return relation_from_aggregates(waspas_scores[0], waspas_scores[1], delta)
+
+
+@_handle_warnings
+def fuzzy_edas(
+    dataset: np.ndarray,
+    weights: np.ndarray,
+    *,
+    spread: float = 0.10,
+    skew: float = 0.0,
+    delta: float = 0.10,
+    weight_spread: float | None = None,
+    **_kw: Any,
+) -> Relation:
+    """Fuzzy EDAS wrapper for VISTA.
+
+    EDAS (Evaluation based on Distance from Average Solution) ranks
+    alternatives by their positive/negative distance to the average.
+    """
+    from pyDecision.algorithm import fuzzy_edas_method
+
+    n = dataset.shape[1]
+    f_dataset = fuzzify_matrix(dataset, spread, skew)
+    f_weights = fuzzify_weights(weights, weight_spread if weight_spread is not None else spread, skew)
+    c_types = ["max"] * n
+
+    scores = fuzzy_edas_method(dataset=f_dataset, criterion_type=c_types, weights=f_weights, graph=False, verbose=False)
+    return relation_from_aggregates(scores[0], scores[1], delta)
+
+
+@_handle_warnings
+def fuzzy_copras(
+    dataset: np.ndarray,
+    weights: np.ndarray,
+    *,
+    spread: float = 0.10,
+    skew: float = 0.0,
+    delta: float = 0.10,
+    weight_spread: float | None = None,
+    **_kw: Any,
+) -> Relation:
+    """Fuzzy COPRAS wrapper for VISTA.
+
+    COPRAS (Complex Proportional Assessment) uses proportional ranking
+    based on benefit and cost criteria aggregation.
+    """
+    from pyDecision.algorithm import fuzzy_copras_method
+
+    n = dataset.shape[1]
+    f_dataset = fuzzify_matrix(dataset, spread, skew)
+    f_weights = fuzzify_weights(weights, weight_spread if weight_spread is not None else spread, skew)
+    c_types = ["max"] * n
+
+    scores = fuzzy_copras_method(dataset=f_dataset, weights=f_weights, criterion_type=c_types, graph=False, verbose=False)
+    return relation_from_aggregates(scores[0], scores[1], delta)

@@ -20,7 +20,7 @@ import numpy as np
 import yaml
 
 from mcda_vista.core import generate_vista, VistaResult
-from mcda_vista.fuzzy_utils import fuzzy_topsis, fuzzy_vikor, fuzzy_moora, fuzzy_waspas
+from mcda_vista.fuzzy_utils import fuzzy_topsis, fuzzy_vikor, fuzzy_moora, fuzzy_waspas, fuzzy_edas, fuzzy_copras
 from mcda_vista.io import save_vista
 from mcda_vista.relation import Relation
 
@@ -33,6 +33,8 @@ FUZZY_METHODS: dict[str, Callable[..., Relation]] = {
     "fuzzy_vikor": fuzzy_vikor,
     "fuzzy_moora": fuzzy_moora,
     "fuzzy_waspas": fuzzy_waspas,
+    "fuzzy_edas": fuzzy_edas,
+    "fuzzy_copras": fuzzy_copras,
 }
 
 

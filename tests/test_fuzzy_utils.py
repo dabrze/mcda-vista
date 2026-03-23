@@ -12,6 +12,8 @@ from mcda_vista.fuzzy_utils import (
     fuzzy_vikor,
     fuzzy_moora,
     fuzzy_waspas,
+    fuzzy_edas,
+    fuzzy_copras,
 )
 from mcda_vista.relation import Relation
 
@@ -204,3 +206,53 @@ class TestFuzzyWaspas:
             DATASET_BETTER, WEIGHTS, spread=0.1, skew=0.0, delta=0.1,
         )
         assert result in _VALID_RELATIONS
+
+
+class TestFuzzyEdas:
+    """Tests for fuzzy_edas."""
+
+    def test_fuzzy_edas_returns_relation(self):
+        """Returns a valid Relation value."""
+        result = fuzzy_edas(
+            DATASET_BETTER, WEIGHTS, spread=0.1, skew=0.0, delta=0.1,
+        )
+        assert result in _VALID_RELATIONS
+
+    def test_fuzzy_edas_discriminates(self):
+        """Clearly better test point returns BETTER."""
+        result = fuzzy_edas(
+            DATASET_BETTER, WEIGHTS, spread=0.05, skew=0.0, delta=0.1,
+        )
+        assert result == Relation.BETTER
+
+    def test_fuzzy_edas_worse(self):
+        """Clearly worse test point returns WORSE."""
+        result = fuzzy_edas(
+            DATASET_WORSE, WEIGHTS, spread=0.05, skew=0.0, delta=0.1,
+        )
+        assert result == Relation.WORSE
+
+
+class TestFuzzyCopras:
+    """Tests for fuzzy_copras."""
+
+    def test_fuzzy_copras_returns_relation(self):
+        """Returns a valid Relation value."""
+        result = fuzzy_copras(
+            DATASET_BETTER, WEIGHTS, spread=0.1, skew=0.0, delta=0.1,
+        )
+        assert result in _VALID_RELATIONS
+
+    def test_fuzzy_copras_discriminates(self):
+        """Clearly better test point returns BETTER."""
+        result = fuzzy_copras(
+            DATASET_BETTER, WEIGHTS, spread=0.05, skew=0.0, delta=0.1,
+        )
+        assert result == Relation.BETTER
+
+    def test_fuzzy_copras_worse(self):
+        """Clearly worse test point returns WORSE."""
+        result = fuzzy_copras(
+            DATASET_WORSE, WEIGHTS, spread=0.05, skew=0.0, delta=0.1,
+        )
+        assert result == Relation.WORSE
