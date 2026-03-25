@@ -220,7 +220,13 @@ def fuzzy_topsis(
     f_weights = fuzzify_weights(weights, weight_spread if weight_spread is not None else spread, skew)
     c_types = ["max"] * n
 
-    scores = fuzzy_topsis_method(dataset=f_dataset, weights=f_weights, criterion_type=c_types, graph=False, verbose=False)
+    scores = fuzzy_topsis_method(
+        dataset=f_dataset,
+        weights=f_weights,
+        criterion_type=c_types,
+        graph=False,
+        verbose=False,
+    )
     return relation_from_aggregates(scores[0], scores[1], delta)
 
 
@@ -293,7 +299,13 @@ def fuzzy_moora(
     f_weights = fuzzify_weights(weights, weight_spread if weight_spread is not None else spread, skew)
     c_types = ["max"] * n
 
-    scores = fuzzy_moora_method(dataset=f_dataset, weights=f_weights, criterion_type=c_types, graph=False, verbose=False)
+    scores = fuzzy_moora_method(
+        dataset=f_dataset,
+        weights=f_weights,
+        criterion_type=c_types,
+        graph=False,
+        verbose=False,
+    )
     return relation_from_aggregates(scores[0], scores[1], delta)
 
 
@@ -375,5 +387,11 @@ def fuzzy_copras(
     f_weights = fuzzify_weights(weights, weight_spread if weight_spread is not None else spread, skew)
     c_types = ["max"] * n
 
-    scores = fuzzy_copras_method(dataset=f_dataset, weights=f_weights, criterion_type=c_types, graph=False, verbose=False)
+    scores = fuzzy_copras_method(
+        dataset=f_dataset,
+        weights=f_weights,
+        criterion_type=c_types,
+        graph=False,
+        verbose=False,
+    )
     return relation_from_aggregates(scores[0], scores[1], delta)

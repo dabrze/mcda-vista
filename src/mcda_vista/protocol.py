@@ -157,24 +157,29 @@ def _nearest_tick_index(value: float, ticks: np.ndarray) -> int:
     return int(np.argmin(np.abs(ticks - value)))
 
 
-def _count_transitions(sequence: Sequence[int], min_run: int = 1) -> int:
+def _count_transitions(
+    sequence: Sequence[int] | np.ndarray[Any, Any],
+    min_run: int = 1,
+) -> int:
     """Count value changes in *sequence*.
 
     When *min_run* > 1, short runs (fewer than *min_run* consecutive
     identical values) are ignored, filtering grid-discretization noise
-    at oblique boundary crossings.
+    at oblique boundary crossings. Accepts both Python sequences and
+    NumPy slices derived from VISTA grids.
     """
-    if len(sequence) < 2:
+    values = np.asarray(sequence, dtype=np.int64)
+    if values.size < 2:
         return 0
     if min_run <= 1:
-        arr = np.asarray(sequence)
-        return int(np.sum(arr[1:] != arr[:-1]))
+        return int(np.sum(values[1:] != values[:-1]))
 
     # Run-length encode
     runs: list[tuple[int, int]] = []
-    current = sequence[0]
+    current = int(values[0])
     length = 1
-    for v in list(sequence)[1:]:
+    for raw_value in values[1:]:
+        v = int(raw_value)
         if v == current:
             length += 1
         else:
@@ -183,8 +188,15 @@ def _count_transitions(sequence: Sequence[int], min_run: int = 1) -> int:
             length = 1
     runs.append((current, length))
 
-    stable = [r for r in runs if r[1] >= min_run]
-    return max(0, len(stable) - 1)
+    stable_values: list[int] = []
+    for value, run_length in runs:
+        if run_length < min_run:
+            continue
+        if stable_values and stable_values[-1] == value:
+            continue
+        stable_values.append(value)
+
+    return max(0, len(stable_values) - 1)
 
 
 def _ray_cells(

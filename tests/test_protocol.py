@@ -6,6 +6,7 @@ import numpy as np
 from mcda_vista.core import VistaResult, generate_vista
 from mcda_vista.protocol import (
     CheckResult,
+    _count_transitions,
     check_diagonal_preference,
     check_dominance,
     check_preference_ratio,
@@ -74,6 +75,19 @@ class TestCheckResult:
         assert cr.message == "ok"
         assert cr.detail == {}
         assert cr.vista_results == []
+
+
+# ── Internal helpers ───────────────────────────────────────────────────
+
+
+class TestCountTransitions:
+    def test_accepts_numpy_array_slices(self):
+        sequence = np.array([0, 0, 1, 1], dtype=np.uint8)
+        assert _count_transitions(sequence[1:]) == 1
+
+    def test_short_runs_do_not_create_false_transition(self):
+        sequence = np.array([0, 0, 1, 0, 0], dtype=np.uint8)
+        assert _count_transitions(sequence, min_run=2) == 0
 
 
 # ── Check 1: Dominance ─────────────────────────────────────────────────
