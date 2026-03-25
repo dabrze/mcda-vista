@@ -27,45 +27,9 @@ is harmless.  It is invoked automatically when this module is first imported.
 
 from __future__ import annotations
 
-import warnings
-
 __all__ = ["apply_patches"]
 
 _patched: bool = False
-
-# Expected pyDecision version against which the patches were developed.
-_EXPECTED_PYDECISION_VERSION = "4.6.0"
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-
-def _check_pydecision_version() -> None:
-    """Emit a warning if pyDecision is not the expected version."""
-    try:
-        import pyDecision
-
-        version = getattr(pyDecision, "__version__", None)
-        if version is None:
-            warnings.warn(
-                "Could not detect pyDecision version; VISTA patches may not "
-                "apply correctly.",
-                stacklevel=3,
-            )
-        elif version != _EXPECTED_PYDECISION_VERSION:
-            warnings.warn(
-                f"pyDecision version {version} detected, but VISTA patches "
-                f"were developed against {_EXPECTED_PYDECISION_VERSION}. "
-                f"Patches will still be applied but may not work correctly.",
-                stacklevel=3,
-            )
-    except ImportError:
-        warnings.warn(
-            "pyDecision is not installed; VISTA patches cannot be applied.",
-            stacklevel=3,
-        )
 
 
 # ---------------------------------------------------------------------------
@@ -99,8 +63,7 @@ def _patch_electre_iii() -> None:
                 if i != j:
                     if (
                         credibility[i, j] > lambda_L
-                        and credibility[i, j]
-                        > credibility[j, i] + lambda_s
+                        and credibility[i, j] > credibility[j, i] + lambda_s
                     ):
                         matrix_d[i, j] = 1.0
         rows = np.sum(matrix_d, axis=1)
@@ -125,9 +88,7 @@ def _patch_electre_iii() -> None:
                 ):
                     qual = qualification(credibility_tie, alpha, beta)
                     index_tie = np.where(qual == np.amax(qual))[0]
-                    credibility_tie = credibility_tie[
-                        index_tie[:, None], index_tie
-                    ]
+                    credibility_tie = credibility_tie[index_tie[:, None], index_tie]
                     qual_tie = qualification(credibility_tie, alpha, beta)
                     for i in range(index.shape[0] - 1, -1, -1):
                         if not np.isin(i, index_tie):
@@ -171,9 +132,7 @@ def _patch_electre_iii() -> None:
                 ):
                     qual = qualification(credibility_tie, alpha, beta)
                     index_tie = np.where(qual == np.amin(qual))[0]
-                    credibility_tie = credibility_tie[
-                        index_tie[:, None], index_tie
-                    ]
+                    credibility_tie = credibility_tie[index_tie[:, None], index_tie]
                     qual_tie = qualification(credibility_tie, alpha, beta)
                     for i in range(index.shape[0] - 1, -1, -1):
                         if not np.isin(i, index_tie):
@@ -202,24 +161,14 @@ def _patch_electre_iii() -> None:
         return rank
 
     # -- patched electre_iii --------------------------------------------------
-    def electre_iii(
-        dataset, P, Q, V, W, alpha=-0.15, beta=0.30, graph=False
-    ):
+    def electre_iii(dataset, P, Q, V, W, alpha=-0.15, beta=0.30, graph=False):
         alts = ["a" + str(alt) for alt in range(1, dataset.shape[0] + 1)]
         alts_D = [0] * dataset.shape[0]
         alts_A = [0] * dataset.shape[0]
-        global_concordance = _global_concordance_matrix(
-            dataset, P=P, Q=Q, W=W
-        )
-        credibility = _credibility_matrix(
-            dataset, global_concordance, P=P, V=V
-        )
-        rank_D = destilation_descending(
-            credibility=credibility, alpha=alpha, beta=beta
-        )
-        rank_A = destilation_ascending(
-            credibility=credibility, alpha=alpha, beta=beta
-        )
+        global_concordance = _global_concordance_matrix(dataset, P=P, Q=Q, W=W)
+        credibility = _credibility_matrix(dataset, global_concordance, P=P, V=V)
+        rank_D = destilation_descending(credibility=credibility, alpha=alpha, beta=beta)
+        rank_A = destilation_ascending(credibility=credibility, alpha=alpha, beta=beta)
         rank_M = []
         for i in range(dataset.shape[0]):
             for j in range(len(rank_D)):
@@ -269,25 +218,14 @@ def _patch_promethee_i() -> None:
         pd_matrix = _preference_degree(dataset, W, Q, S, P, F)
         flow_plus = np.sum(pd_matrix, axis=1) / (pd_matrix.shape[0] - 1)
         flow_minus = np.sum(pd_matrix, axis=0) / (pd_matrix.shape[0] - 1)
-        cp_matrix = np.empty(
-            (pd_matrix.shape[0], pd_matrix.shape[0]), dtype="U25"
-        )
+        cp_matrix = np.empty((pd_matrix.shape[0], pd_matrix.shape[0]), dtype="U25")
         cp_matrix.fill("-")
         for i in range(cp_matrix.shape[0]):
             for j in range(cp_matrix.shape[0]):
                 if (
-                    (
-                        flow_plus[i] > flow_plus[j]
-                        and flow_minus[i] < flow_minus[j]
-                    )
-                    or (
-                        flow_plus[i] == flow_plus[j]
-                        and flow_minus[i] < flow_minus[j]
-                    )
-                    or (
-                        flow_plus[i] > flow_plus[j]
-                        and flow_minus[i] == flow_minus[j]
-                    )
+                    (flow_plus[i] > flow_plus[j] and flow_minus[i] < flow_minus[j])
+                    or (flow_plus[i] == flow_plus[j] and flow_minus[i] < flow_minus[j])
+                    or (flow_plus[i] > flow_plus[j] and flow_minus[i] == flow_minus[j])
                 ):
                     cp_matrix[i, j] = "P+"
                 if (
@@ -296,12 +234,8 @@ def _patch_promethee_i() -> None:
                     and i != j
                 ):
                     cp_matrix[i, j] = "I"
-                if (
-                    flow_plus[i] > flow_plus[j]
-                    and flow_minus[i] > flow_minus[j]
-                ) or (
-                    flow_plus[i] < flow_plus[j]
-                    and flow_minus[i] < flow_minus[j]
+                if (flow_plus[i] > flow_plus[j] and flow_minus[i] > flow_minus[j]) or (
+                    flow_plus[i] < flow_plus[j] and flow_minus[i] < flow_minus[j]
                 ):
                     cp_matrix[i, j] = "R"
         if graph:
@@ -372,7 +306,6 @@ def apply_patches() -> None:
     global _patched
     if _patched:
         return
-    _check_pydecision_version()
     _patch_electre_iii()
     _patch_promethee_i()
     _patch_regime()

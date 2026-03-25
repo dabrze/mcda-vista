@@ -1,4 +1,4 @@
-"""VISTA — VISualization of relation Topologies of Alternatives in MCDA methods."""
+"""VISTA — VISualization of relation Topologies of Alternatives."""
 
 __version__ = "0.1.0"
 

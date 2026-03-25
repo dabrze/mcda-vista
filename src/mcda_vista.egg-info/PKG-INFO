@@ -1,10 +1,10 @@
 Metadata-Version: 2.4
 Name: mcda-vista
-Version: 0.1.0
-Summary: VISTA — Visual Inspection of Sensitivity To Alternatives in MCDA methods
-Author: VISTA Contributors
+Version: 0.2.0
+Summary: VISTA — VISualization of relation Topologies of Alternatives
+Author: Robert Susmaga, Izabela Szczech, Dariusz Brzezinski
 License: MIT
-Keywords: MCDA,sensitivity,visualization,decision-making
+Keywords: MCDA,multicriteria ranking,visualization,decision-making
 Classifier: Development Status :: 3 - Alpha
 Classifier: Intended Audience :: Science/Research
 Classifier: License :: OSI Approved :: MIT License
@@ -32,7 +32,6 @@ Dynamic: license-file
 # VISTA — VISualization of relation Topologies of Alternatives
 
 [![CI](https://github.com/dabrze/mcda-vista/actions/workflows/ci.yml/badge.svg)](https://github.com/dabrze/mcda-vista/actions/workflows/ci.yml)
-[![PyPI](https://img.shields.io/pypi/v/mcda-vista)](https://pypi.org/project/mcda-vista/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
@@ -58,14 +57,16 @@ The resulting colour-coded map reveals decision boundaries and structural differ
 
 ## Installation
 
+Download the source code and install the package with pip:
+
 ```bash
-pip install mcda-vista
+pip install .
 ```
 
 To include the interactive Streamlit dashboard:
 
 ```bash
-pip install mcda-vista[app]
+pip install .[app]
 ```
 
 For development (linting, type-checking, tests):
@@ -86,8 +87,8 @@ fig = plot_vista(result, xlabel="Criterion 1", ylabel="Criterion 2")
 fig.savefig("my_first_vista.png", dpi=300)
 ```
 
-`generate_vista` sweeps a 101 × 101 grid over the unit square, evaluates
-TOPSIS at every point, and returns a `VistaResult` dataclass. `plot_vista`
+`generate_vista` sweeps a 101 × 101 grid of alternatives over the criterion space, evaluates
+the ranking method (in this case TOPSIS) at every point, and returns a `VistaResult` dataclass. `plot_vista`
 renders it as a scatter plot coloured by the relation type.
 
 ---
@@ -149,6 +150,34 @@ fig.savefig("custom_method.png", dpi=300)
 
 ---
 
+## Exploratory Diagnostic Checks
+
+The VISTA exploratory checklist is a systematic six-step diagnostic that assesses whether a ranking method meets the decision maker's expectations:
+
+1. **Dominance relation** — no violations in dominating/dominated cones
+2. **Self-indifference** — identical alternatives are indifferent
+3. **Diagonal preference change** — at most one transition along the diagonal
+4. **Radial preference change** — at most one transition along any ray
+5. **Preference ratio** — shows whether the Better/Worse ratio is balanced or not
+6. **Third alternative stability (IIA check)** — verifies whether the VISTA remains stable when a third alternative is added
+
+```python
+from mcda_vista.protocol import run_protocol, plot_protocol_report
+
+report = run_protocol("topsis", resolution=101, delta=0.10)
+print(report.summary())
+fig = plot_protocol_report(report)
+fig.savefig("protocol_report.png", dpi=300)
+```
+
+The protocol uses equal weights and the midpoint as reference by default.
+Optionally pass `extra_weights` to test weight sensitivity.
+See [`notebooks/12_protocol_check.ipynb`](notebooks/12_protocol_check.ipynb) for a full walkthrough with Fuzzy TOPSIS.
+
+![Protocol report for TOPSIS](docs/protocol_report.png)
+
+---
+
 ## Experiments
 
 Reproducible experiments are configured via YAML files stored in
@@ -186,15 +215,16 @@ pip install mcda-vista[app]
 
 ## API Overview
 
-| Module                  | Purpose                                                        |
-| ----------------------- | -------------------------------------------------------------- |
-| `mcda_vista.core`       | `generate_vista()`, `VistaGenerator`, `VistaResult`            |
-| `mcda_vista.methods`    | Method registry — `get_method()`, `list_methods()`             |
-| `mcda_vista.relation`   | `Relation` enum (Better, Worse, Indifferent, Incomparable)     |
-| `mcda_vista.plotting`   | `plot_vista()`, `plot_vista_grid()`, `plot_vista_comparison()` |
-| `mcda_vista.io`         | `save_vista()`, `load_vista()`                                 |
-| `mcda_vista.converters` | Score-to-relation conversion utilities                         |
-| `mcda_vista.datasets`   | Dataset helpers for grid construction                          |
+| Module                  | Purpose                                                         |
+| ----------------------- | --------------------------------------------------------------- |
+| `mcda_vista.core`       | `generate_vista()`, `VistaGenerator`, `VistaResult`             |
+| `mcda_vista.methods`    | Method registry — `get_method()`, `list_methods()`              |
+| `mcda_vista.relation`   | `Relation` enum (Better, Worse, Indifferent, Incomparable)      |
+| `mcda_vista.plotting`   | `plot_vista()`, `plot_vista_grid()`, `plot_vista_comparison()`  |
+| `mcda_vista.protocol`   | `run_protocol()`, `plot_protocol_report()`, six check functions |
+| `mcda_vista.io`         | `save_vista()`, `load_vista()`                                  |
+| `mcda_vista.converters` | Score-to-relation conversion utilities                          |
+| `mcda_vista.datasets`   | Dataset helpers for grid construction                           |
 
 ---
 
@@ -210,10 +240,15 @@ This project is licensed under the [MIT License](LICENSE).
 
 ---
 
-<!-- ## Citation
+## Citation
 
 If you use VISTA in your research, please cite:
 
 ```bibtex
-TODO: Add citation
-``` -->
+@article{vista,
+  author  = {Susmaga, Robert and Szcz\c{e}ch, Izabela and Brzezinski, Dariusz},
+  title   = {Visualization of Preferential Relations in Analyses of Multicriteria Ranking Methods},
+  note    = {In review},
+  year    = {2026}
+}
+```

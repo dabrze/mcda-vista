@@ -1,7 +1,6 @@
 """Central engine for the VISTA library.
 
-Ports the grid-sweep logic from the original ``method_templates.py``
-(``corona_Method``) into a clean, extensible design built around
+Implements the grid-sweep logic using extensible design built around
 :class:`VistaGenerator` and the :class:`VistaResult` dataclass.
 
 Typical usage
@@ -133,7 +132,6 @@ class VistaGenerator:
         self.n_criteria = n_criteria
         self.resolution = resolution
 
-        # Resolve method ---------------------------------------------------
         if isinstance(method, str):
             from mcda_vista.methods import get_method
 
@@ -149,7 +147,6 @@ class VistaGenerator:
             self._method_name = getattr(method, "__name__", repr(method))
             self._method = method
 
-        # Reference & weights ----------------------------------------------
         self.reference = np.asarray(
             reference if reference is not None else [0.5] * n_criteria,
             dtype=np.float64,
@@ -166,11 +163,8 @@ class VistaGenerator:
             )
         if self.weights.shape != (n_criteria,):
             raise ValueError(
-                f"weights has shape {self.weights.shape}, "
-                f"expected ({n_criteria},)"
+                f"weights has shape {self.weights.shape}, " f"expected ({n_criteria},)"
             )
-
-    # ── public API -------------------------------------------------------
 
     def generate(
         self,
@@ -205,8 +199,8 @@ class VistaGenerator:
         third_arr: np.ndarray | None = None
         extra_arr: np.ndarray | None = None
 
-        rows: list[np.ndarray] = [self.reference.copy()]          # row 0
-        rows.append(np.zeros(n, dtype=np.float64))                # row 1 (placeholder)
+        rows: list[np.ndarray] = [self.reference.copy()]  # row 0
+        rows.append(np.zeros(n, dtype=np.float64))  # row 1 (placeholder)
 
         if third_alternative is not None:
             third_arr = np.asarray(third_alternative, dtype=np.float64)
@@ -233,13 +227,11 @@ class VistaGenerator:
 
         # ── generate grid ────────────────────────────────────────────────
         ticks = np.linspace(0.0, 1.0, res)
-        total_points = res ** n
+        total_points = res**n
         grid = np.empty((total_points, n), dtype=np.float64)
         relations = np.empty(total_points, dtype=np.uint8)
 
         # Build the full grid up-front using itertools.product.
-        # itertools.product iterates the *last* argument fastest, matching
-        # the nested-loop order in the original corona_Method.
         grid_iter = itertools.product(*(ticks for _ in range(n)))
 
         # Optional progress bar

@@ -4,15 +4,17 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mcda-vista"
-version = "0.1.0"
-description = "VISTA — Visual Inspection of Sensitivity To Alternatives in MCDA methods"
+version = "0.2.0"
+description = "VISTA — VISualization of relation Topologies of Alternatives"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
-    {name = "VISTA Contributors"}
+    {name = "Robert Susmaga"},
+    {name = "Izabela Szczech"}, 
+    {name = "Dariusz Brzezinski"},
 ]
-keywords = ["MCDA", "sensitivity", "visualization", "decision-making"]
+keywords = ["MCDA", "multicriteria ranking", "visualization", "decision-making"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",

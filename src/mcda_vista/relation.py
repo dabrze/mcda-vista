@@ -1,6 +1,6 @@
 """Core relation type for the VISTA library.
 
-Encodes pairwise comparison outcomes used throughout MCDA methods
+Encodes pairwise comparison outcomes used throughout ranking methods
 (ELECTRE, PROMETHEE, etc.). Numeric values follow the original encoding:
 0 = error/trouble, 1 = P− (worse), 2 = I (indifferent),
 3 = P+ (better), 4 = R (incomparable).
@@ -22,8 +22,6 @@ class Relation(IntEnum):
     BETTER = 3
     INCOMPARABLE = 4
 
-    # -- readable helpers -------------------------------------------------
-
     @property
     def label(self) -> str:
         """Human-readable name for the relation."""
@@ -33,8 +31,6 @@ class Relation(IntEnum):
     def color(self) -> str:
         """Hex colour used when plotting this relation."""
         return _COLORS[self]
-
-    # -- class-level utilities --------------------------------------------
 
     @classmethod
     def color_map(cls) -> dict[int, str]:
