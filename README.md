@@ -52,15 +52,16 @@ pip install -e ".[dev]"
 from mcda_vista import generate_vista, plot_vista
 
 result = generate_vista("topsis", resolution=101, delta=0.10, progress=True)
-fig = plot_vista(result, xlabel="Criterion 1", ylabel="Criterion 2")
+fig = plot_vista(result, xlabel="Criterion 1", ylabel="Criterion 2", point_size=7)
 fig.savefig("topsis_vista.png", dpi=300)
 ```
 
-![TOPSIS vista](docs/topsis_vista.png)
+<img src="/dabrze/mcda-vista/raw/main/docs/topsis_vista.png" alt="TOPSIS vista" style="max-width: 50%;">
 
 `generate_vista` sweeps a 101 × 101 grid of alternatives over the criterion space, evaluates
 the ranking method (in this case TOPSIS) at every point, and returns a `VistaResult` dataclass. `plot_vista`
-renders it as a scatter plot coloured by the relation type.
+renders it as a scatter plot coloured by the relation type - adjust the `point_size` parameter to the
+resolution and size of the image.
 
 ---
 
@@ -121,9 +122,9 @@ fig.savefig("custom_method.png", dpi=300)
 
 ---
 
-## Exploratory Diagnostic Checks
+## Exploratory Diagnostic Protocol
 
-The VISTA exploratory checklist is a systematic six-step diagnostic that assesses whether a ranking method meets the decision maker's expectations:
+The VISTA exploratory protocol is a systematic six-step checklist that assesses whether a ranking method meets the decision maker's expectations:
 
 1. **Dominance relation** — no violations in dominating/dominated cones
 2. **Self-indifference** — identical alternatives are indifferent
