@@ -13,6 +13,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.figure import Figure
 
+from mcda_vista._constants import (
+    COMPARISON_FIGURE_SCALE,
+    GRID_FIGURE_SCALE,
+    LEGEND_BOTTOM_MARGIN,
+    POINT_SIZE_BASE,
+    POINT_SIZE_DIVISOR,
+    POINT_SIZE_MIN,
+)
 from mcda_vista.relation import Relation
 
 if TYPE_CHECKING:
@@ -39,7 +47,7 @@ _LEGEND_ORDER: list[Relation] = [
 
 def _auto_point_size(resolution: int) -> float:
     """Compute a scatter marker area that fills the plot nicely."""
-    return max(0.1, 20.0 / (resolution / 10))
+    return max(POINT_SIZE_MIN, POINT_SIZE_BASE / (resolution / POINT_SIZE_DIVISOR))
 
 
 # ── Public helpers ───────────────────────────────────────────────────────
@@ -169,6 +177,26 @@ def _shared_legend_handles() -> list[mpatches.Patch]:
     ]
 
 
+def _finalize_figure(fig: Figure, *, title: str | None, show_legend: bool) -> None:
+    """Apply shared legend and layout adjustments to a multi-panel figure."""
+    if title is not None:
+        fig.suptitle(title, fontweight="bold", y=1.02)
+
+    if show_legend:
+        fig.legend(
+            handles=_shared_legend_handles(),
+            loc="lower center",
+            ncol=len(_LEGEND_ORDER),
+            frameon=False,
+            fontsize="small",
+            bbox_to_anchor=(0.5, -0.02),
+        )
+
+    fig.tight_layout()
+    if show_legend:
+        fig.subplots_adjust(bottom=LEGEND_BOTTOM_MARGIN)
+
+
 # ── Public plot functions ────────────────────────────────────────────────
 
 
@@ -271,7 +299,7 @@ def plot_vista_grid(
     nrows = len(row_labels)
     ncols = len(col_labels)
     if figsize is None:
-        figsize = (2.5 * ncols, 2.5 * nrows)
+        figsize = (GRID_FIGURE_SCALE * ncols, GRID_FIGURE_SCALE * nrows)
 
     fig, axes = plt.subplots(
         nrows,
@@ -308,22 +336,7 @@ def plot_vista_grid(
             ax.set_yticklabels([])
             ax.tick_params(length=0)
 
-    if title is not None:
-        fig.suptitle(title, fontweight="bold", y=1.02)
-
-    if show_legend:
-        fig.legend(
-            handles=_shared_legend_handles(),
-            loc="lower center",
-            ncol=len(_LEGEND_ORDER),
-            frameon=False,
-            fontsize="small",
-            bbox_to_anchor=(0.5, -0.02),
-        )
-
-    fig.tight_layout()
-    if show_legend:
-        fig.subplots_adjust(bottom=0.08)
+    _finalize_figure(fig, title=title, show_legend=show_legend)
 
     return fig
 
@@ -366,7 +379,7 @@ def plot_vista_comparison(
     actual_ncols = min(n, ncols)
 
     if figsize is None:
-        figsize = (2.8 * actual_ncols, 2.8 * nrows)
+        figsize = (COMPARISON_FIGURE_SCALE * actual_ncols, COMPARISON_FIGURE_SCALE * nrows)
 
     fig, axes = plt.subplots(nrows, actual_ncols, figsize=figsize, squeeze=False)
 
@@ -384,21 +397,6 @@ def plot_vista_comparison(
         r, c = divmod(idx, actual_ncols)
         axes[r, c].set_visible(False)
 
-    if title is not None:
-        fig.suptitle(title, fontweight="bold", y=1.02)
-
-    if show_legend:
-        fig.legend(
-            handles=_shared_legend_handles(),
-            loc="lower center",
-            ncol=len(_LEGEND_ORDER),
-            frameon=False,
-            fontsize="small",
-            bbox_to_anchor=(0.5, -0.02),
-        )
-
-    fig.tight_layout()
-    if show_legend:
-        fig.subplots_adjust(bottom=0.08)
+    _finalize_figure(fig, title=title, show_legend=show_legend)
 
     return fig

@@ -23,6 +23,7 @@ from typing import Any, Callable, Sequence
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
 from mcda_vista.core import VistaResult, generate_vista
@@ -718,7 +719,7 @@ def _check_color(check: CheckResult) -> str:
     return "#888888"
 
 
-def _annotate_dominance(ax, check: CheckResult, result: VistaResult) -> None:
+def _annotate_dominance(ax: Axes, check: CheckResult, result: VistaResult) -> None:
     ref = result.reference
     ax.add_patch(
         mpatches.Rectangle(
@@ -744,14 +745,14 @@ def _annotate_dominance(ax, check: CheckResult, result: VistaResult) -> None:
     )
 
 
-def _annotate_diagonal(ax, check: CheckResult, result: VistaResult) -> None:
+def _annotate_diagonal(ax: Axes, check: CheckResult, result: VistaResult) -> None:
     ax.plot(
         [0, 1], [0, 1],
         color="#555555", linewidth=0.8, linestyle="-.", alpha=0.7, zorder=4,
     )
 
 
-def _annotate_radial(ax, check: CheckResult, result: VistaResult) -> None:
+def _annotate_radial(ax: Axes, check: CheckResult, result: VistaResult) -> None:
     ref = result.reference
     n_rays = check.detail.get("n_rays", 36)
     violating = set(check.detail.get("violating_angles_deg", []))
@@ -773,7 +774,7 @@ def _annotate_radial(ax, check: CheckResult, result: VistaResult) -> None:
         )
 
 
-def _annotate_ratio(ax, check: CheckResult, result: VistaResult) -> None:
+def _annotate_ratio(ax: Axes, check: CheckResult, result: VistaResult) -> None:
     percentages = check.detail.get("percentages", {})
     balanced = check.detail.get("balanced", True)
 
@@ -802,7 +803,7 @@ def _annotate_ratio(ax, check: CheckResult, result: VistaResult) -> None:
     )
 
 
-def _annotate_stability(ax, check: CheckResult, result: VistaResult) -> None:
+def _annotate_stability(ax: Axes, check: CheckResult, result: VistaResult) -> None:
     changes = check.detail.get("changes", {})
     threshold = check.detail.get("threshold", 0.05)
 

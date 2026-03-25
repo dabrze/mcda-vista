@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import streamlit as st
 
+from mcda_vista._constants import POINT_SIZE_BASE, POINT_SIZE_DIVISOR, POINT_SIZE_MIN
 from mcda_vista.core import VistaResult, generate_vista
 from mcda_vista.methods import get_method, list_methods
 from mcda_vista.methods.base import MethodAdapter
@@ -199,7 +200,7 @@ def main() -> None:
         fig = plot_vista(
             result,
             title=f"{adapter.display_name} VISTA",
-            point_size=max(0.1, 20.0 / (resolution / 10)),
+            point_size=max(POINT_SIZE_MIN, POINT_SIZE_BASE / (resolution / POINT_SIZE_DIVISOR)),
         )
         plt.tight_layout()
 
@@ -292,7 +293,7 @@ def main() -> None:
             results,
             ncols=ncols,
             title="VISTA Method Comparison",
-            point_size=max(0.1, 15.0 / (resolution / 10)),
+            point_size=max(POINT_SIZE_MIN, POINT_SIZE_BASE / (resolution / POINT_SIZE_DIVISOR)),
         )
 
         st.pyplot(fig, use_container_width=True)
