@@ -57,7 +57,7 @@ fig.savefig("topsis_vista.png", dpi=300)
 ```
 
 <a target="_blank" rel="noopener noreferrer" href="/docs/topsis_vista.png">
-    <img src="/docs/topsis_vista.png" alt="Example vista" style="max-width: 50%;">
+    <img src="/docs/topsis_vista.png" alt="Example vista" width=500">
 </a>
 
 `generate_vista` sweeps a 101 × 101 grid of alternatives over the criterion space, evaluates
