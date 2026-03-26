@@ -56,7 +56,9 @@ fig = plot_vista(result, point_size=7)
 fig.savefig("topsis_vista.png", dpi=300)
 ```
 
-<img src="/dabrze/mcda-vista/raw/main/docs/topsis_vista.png" alt="TOPSIS vista" style="max-width: 50%;">
+<a target="_blank" rel="noopener noreferrer" href="/docs/topsis_vista.png">
+    <img src="/docs/topsis_vista.png" alt="Example vista" style="max-width: 50%;">
+</a>
 
 `generate_vista` sweeps a 101 × 101 grid of alternatives over the criterion space, evaluates
 the ranking method (in this case TOPSIS) at every point, and returns a `VistaResult` dataclass. `plot_vista`
