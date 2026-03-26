@@ -52,7 +52,7 @@ pip install -e ".[dev]"
 from mcda_vista import generate_vista, plot_vista
 
 result = generate_vista("topsis", resolution=101, delta=0.10, progress=True)
-fig = plot_vista(result, xlabel="Criterion 1", ylabel="Criterion 2", point_size=7)
+fig = plot_vista(result, point_size=7)
 fig.savefig("topsis_vista.png", dpi=300)
 ```
 
@@ -137,16 +137,28 @@ The VISTA exploratory protocol is a systematic six-step checklist that assesses 
 from mcda_vista.protocol import run_protocol, plot_protocol_report
 
 report = run_protocol("topsis", resolution=101, delta=0.10)
-print(report.summary())
-fig = plot_protocol_report(report)
+fig = plot_protocol_report(report, point_size=3)
 fig.savefig("protocol_report.png", dpi=300)
+print(report.summary())
+```
+
+![Protocol report for TOPSIS](docs/protocol_report.png)
+```
+VISTA Protocol Report: topsis
+=============================
+  ✓ PASS  Dominance relation: No violations (2500 dominating, 2500 dominated points).
+  ✗? FAIL  Self-indifference: Reference point is Error — likely a numerical issue (nearest grid point at distance 0.0000).
+  ✓ PASS  Diagonal preference change: Upper-right: 1 transition(s), lower-left: 1 transition(s).
+  ✓ PASS  Radial preference change: All 36 rays have at most 1 transition.
+  ● IMBALANCED  Preference ratio: Imbalanced (56.8% worse, 37.9% better than reference).
+  ✗ FAIL  Third alternative stability: Max change 14.4% > 5%. Changes: [0.5, 0.5]: 4.5%, [0.25, 0.5]: 10.3%, [0.5, 0.75]: 4.5%, [0.25, 0.25]: 7.4%, [0.25, 0.75]: 14.4%.
 ```
 
 The protocol uses equal weights and the midpoint as reference by default.
 Optionally pass `extra_weights` to test weight sensitivity.
 See [`notebooks/12_protocol_check.ipynb`](notebooks/12_protocol_check.ipynb) for a full walkthrough with Fuzzy TOPSIS.
 
-![Protocol report for TOPSIS](docs/protocol_report.png)
+
 
 ---
 
@@ -180,7 +192,7 @@ Select a method, adjust parameters with sliders, and watch the VISTA map
 update live. Install the dashboard extra to enable it:
 
 ```bash
-pip install mcda-vista[app]
+pip install .[app]
 ```
 
 ---

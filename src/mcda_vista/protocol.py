@@ -33,6 +33,7 @@ from mcda_vista.relation import Relation
 __all__ = [
     "CheckResult",
     "ProtocolReport",
+    "SensitivityRow",
     "check_dominance",
     "check_self_indifference",
     "check_diagonal_preference",
@@ -75,6 +76,28 @@ class CheckResult:
 
 
 @dataclass
+class SensitivityRow:
+    """A row of VISTA results for parameter-sensitivity analysis.
+
+    Used by :func:`plot_protocol_report` to render optional extra rows
+    (e.g. weight sensitivity, spread/skew analysis for fuzzy methods).
+
+    Attributes
+    ----------
+    title : str
+        Centred row title (e.g. ``"Spread analysis (skew=0.0)"``).
+    labels : list[str]
+        Per-subplot label for each result.
+    results : list[VistaResult]
+        One VISTA result per subplot.
+    """
+
+    title: str
+    labels: list[str]
+    results: list[VistaResult]
+
+
+@dataclass
 class ProtocolReport:
     """Complete protocol evaluation report for a method.
 
@@ -91,6 +114,10 @@ class ProtocolReport:
     weight_sensitivity : list
         Optional weight-sensitivity results.  Each element is a
         ``(weights, vista_result, checks_1_to_5)`` tuple.
+    extra_rows : list[SensitivityRow]
+        Optional additional rows rendered by :func:`plot_protocol_report`.
+        Populated automatically from *weight_sensitivity* when present;
+        users may also append custom rows (e.g. spread/skew sweeps).
     metadata : dict
         Auxiliary data (e.g. ``elapsed_seconds``).
     """
@@ -99,9 +126,10 @@ class ProtocolReport:
     params: dict
     checks: list[CheckResult]
     baseline: VistaResult
-    weight_sensitivity: list[tuple[list[float], VistaResult, list[CheckResult]]] = field(
-        default_factory=list
+    weight_sensitivity: list[tuple[list[float], VistaResult, list[CheckResult]]] = (
+        field(default_factory=list)
     )
+    extra_rows: list[SensitivityRow] = field(default_factory=list)
     metadata: dict = field(default_factory=dict)
 
     @property
@@ -652,6 +680,7 @@ def run_protocol(
 
     # ── optional weight sensitivity ─────────────────────────────────
     weight_sensitivity: list[tuple[list[float], VistaResult, list[CheckResult]]] = []
+    extra_rows: list[SensitivityRow] = []
     if extra_weights is not None:
         for w in extra_weights:
             w_result = generate_vista(
@@ -670,6 +699,17 @@ def run_protocol(
             ]
             weight_sensitivity.append((w, w_result, w_checks))
 
+        extra_rows.append(
+            SensitivityRow(
+                title="Criteria weights",
+                labels=[
+                    "w=[" + ", ".join(f"{v:.2f}" for v in w) + "]"
+                    for w, _, _ in weight_sensitivity
+                ],
+                results=[vr for _, vr, _ in weight_sensitivity],
+            )
+        )
+
     elapsed = time.perf_counter() - t_start
 
     return ProtocolReport(
@@ -678,6 +718,7 @@ def run_protocol(
         checks=checks,
         baseline=baseline,
         weight_sensitivity=weight_sensitivity,
+        extra_rows=extra_rows,
         metadata={"elapsed_seconds": elapsed},
     )
 
@@ -747,8 +788,13 @@ def _annotate_dominance(ax: Axes, check: CheckResult, result: VistaResult) -> No
 
 def _annotate_diagonal(ax: Axes, check: CheckResult, result: VistaResult) -> None:
     ax.plot(
-        [0, 1], [0, 1],
-        color="#555555", linewidth=0.8, linestyle="-.", alpha=0.7, zorder=4,
+        [0, 1],
+        [0, 1],
+        color="#555555",
+        linewidth=0.8,
+        linestyle="-.",
+        alpha=0.7,
+        zorder=4,
     )
 
 
@@ -770,7 +816,10 @@ def _annotate_radial(ax: Axes, check: CheckResult, result: VistaResult) -> None:
         ax.plot(
             [ref[0], ref[0] + dx],
             [ref[1], ref[1] + dy],
-            color=color, linewidth=lw, alpha=alpha, zorder=1,
+            color=color,
+            linewidth=lw,
+            alpha=alpha,
+            zorder=1,
         )
 
 
@@ -795,9 +844,13 @@ def _annotate_ratio(ax: Axes, check: CheckResult, result: VistaResult) -> None:
         text_lines.append(f"  Incom:  {pct_incompat:.1f}%")
 
     ax.text(
-        0.02, 0.98, "\n".join(text_lines),
-        transform=ax.transAxes, fontsize=6,
-        verticalalignment="top", fontfamily="monospace",
+        0.02,
+        0.98,
+        "\n".join(text_lines),
+        transform=ax.transAxes,
+        fontsize=6,
+        verticalalignment="top",
+        fontfamily="monospace",
         bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.8),
         zorder=6,
     )
@@ -812,9 +865,13 @@ def _annotate_stability(ax: Axes, check: CheckResult, result: VistaResult) -> No
         text_lines.append(f"  {label}: {pct:.1%}")
 
     ax.text(
-        0.02, 0.98, "\n".join(text_lines),
-        transform=ax.transAxes, fontsize=6,
-        verticalalignment="top", fontfamily="monospace",
+        0.02,
+        0.98,
+        "\n".join(text_lines),
+        transform=ax.transAxes,
+        fontsize=6,
+        verticalalignment="top",
+        fontfamily="monospace",
         bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.8),
         zorder=6,
     )
@@ -831,39 +888,66 @@ _ANNOTATORS: dict[str, Any] = {
 
 def plot_protocol_report(
     report: ProtocolReport,
+    point_size: float | None = None,
     figsize: tuple[float, float] | None = None,
+    ncols: int = 5,
 ) -> Figure:
-    """Render a multi-panel summary figure for a protocol report.
+    """Render a multi-row grid summary figure for a protocol report.
 
-    The figure contains one subplot per check (2 × 3 grid), each showing
-    the baseline VISTA with check-specific annotations and a pass / fail
-    badge in the title.
+    Layout (matching the VISTA protocol figure convention):
+
+    * **Row 1** — checks 1–5 (Dominance, Self-indifference, Diagonal
+      preference, Radial preference, Preference ratio), each drawn on
+      the baseline VISTA with check-specific annotations.
+    * **Row 2** — third-alternative stability: one subplot per third
+      alternative, showing the actual VISTA result with that alternative.
+    * **Rows 3+** — optional :class:`SensitivityRow` entries from
+      ``report.extra_rows`` (e.g. criteria-weight, spread, or skew
+      sensitivity).
 
     Parameters
     ----------
     report : ProtocolReport
         A completed protocol report from :func:`run_protocol`.
+    point_size : float or None
+        Marker area passed to ``ax.scatter``.  When *None* the size is
+        automatically derived from ``result.resolution``.
     figsize : tuple or None
         Figure size in inches; auto-computed if *None*.
+    ncols : int
+        Number of columns in the grid (default 5).
 
     Returns
     -------
     Figure
     """
-    n_checks = len(report.checks)
-    ncols = 3
-    nrows = max(1, int(np.ceil(n_checks / ncols)))
+    # ── Checks 1–5 (row 1) ──────────────────────────────────────────
+    core_checks = report.checks[:5]
+
+    # ── Third-alternative row (row 2) ───────────────────────────────
+    stability_check = report.checks[5] if len(report.checks) > 5 else None
+    # vista_results[0] is the baseline; the rest are the third-alt runs
+    third_results: list[VistaResult] = []
+    if stability_check is not None and len(stability_check.vista_results) > 1:
+        third_results = stability_check.vista_results[1:]
+
+    # ── Compute total rows ──────────────────────────────────────────
+    nrows = 1  # row 1: checks
+    if third_results:
+        nrows += 1  # row 2: third-alternative stability
+    nrows += len(report.extra_rows)  # optional sensitivity rows
 
     if figsize is None:
-        figsize = (4.5 * ncols, 4.5 * nrows)
+        figsize = (3.2 * ncols, 3.2 * nrows)
 
     fig, axes = plt.subplots(nrows, ncols, figsize=figsize, squeeze=False)
 
-    for idx, check in enumerate(report.checks):
-        r, c = divmod(idx, ncols)
-        ax = axes[r, c]
-
-        _draw_vista_on_ax(ax, report.baseline)
+    # ── Row 1: checks 1–5 ──────────────────────────────────────────
+    for c_idx, check in enumerate(core_checks):
+        if c_idx >= ncols:
+            break
+        ax = axes[0, c_idx]
+        _draw_vista_on_ax(ax, report.baseline, point_size)
 
         annotator = _ANNOTATORS.get(check.name)
         if annotator is not None:
@@ -873,15 +957,81 @@ def plot_protocol_report(
         color = _check_color(check)
         ax.set_title(
             f"{icon} {check.name}",
-            fontsize="small", fontweight="bold", color=color,
+            fontsize="small",
+            fontweight="bold",
+            color=color,
         )
         ax.set_xlim(-0.02, 1.02)
         ax.set_ylim(-0.02, 1.02)
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        ax.tick_params(length=0)
 
-    for idx in range(n_checks, nrows * ncols):
-        r, c = divmod(idx, ncols)
-        axes[r, c].set_visible(False)
+    # Hide unused cells in row 1
+    for c_idx in range(len(core_checks), ncols):
+        axes[0, c_idx].set_visible(False)
 
+    # ── Row 2: third-alternative stability ──────────────────────────
+    if third_results:
+        row_idx = 1
+        for c_idx in range(ncols):
+            ax = axes[row_idx, c_idx]
+            if c_idx < len(third_results):
+                res = third_results[c_idx]
+                _draw_vista_on_ax(ax, res, point_size)
+                if res.third_alternative is not None:
+                    vals = ", ".join(f"{v:.2f}" for v in res.third_alternative)
+                    ax.set_title(f"c=[{vals}]", fontsize="small")
+                ax.set_xlim(-0.02, 1.02)
+                ax.set_ylim(-0.02, 1.02)
+                ax.set_xticklabels([])
+                ax.set_yticklabels([])
+                ax.tick_params(length=0)
+            else:
+                ax.set_visible(False)
+
+        # Centred row super-title for third-alternative stability
+        if stability_check is not None:
+            icon = _check_icon(stability_check)
+            color = _check_color(stability_check)
+            mid = ncols // 2
+            axes[row_idx, mid].set_title(
+                f"{icon} Third-alternative stability\n"
+                + axes[row_idx, mid].get_title(),
+                fontsize="small",
+                fontweight="bold",
+                color=color,
+            )
+
+    # ── Rows 3+: extra sensitivity rows ─────────────────────────────
+    extra_start = 1 + (1 if third_results else 0)
+    for row_offset, sens_row in enumerate(report.extra_rows):
+        row_idx = extra_start + row_offset
+        for c_idx in range(ncols):
+            ax = axes[row_idx, c_idx]
+            if c_idx < len(sens_row.results):
+                _draw_vista_on_ax(ax, sens_row.results[c_idx], point_size)
+                if c_idx < len(sens_row.labels):
+                    ax.set_title(sens_row.labels[c_idx], fontsize="small")
+                ax.set_xlim(-0.02, 1.02)
+                ax.set_ylim(-0.02, 1.02)
+                ax.set_xticklabels([])
+                ax.set_yticklabels([])
+                ax.tick_params(length=0)
+            else:
+                ax.set_visible(False)
+
+        # Centred row super-title
+        mid = ncols // 2
+        if mid < len(sens_row.results):
+            existing = axes[row_idx, mid].get_title()
+            axes[row_idx, mid].set_title(
+                f"{sens_row.title}\n{existing}",
+                fontsize="small",
+                fontweight="bold",
+            )
+
+    # ── Shared legend ───────────────────────────────────────────────
     fig.legend(
         handles=_shared_legend_handles(),
         loc="lower center",
@@ -891,11 +1041,7 @@ def plot_protocol_report(
         bbox_to_anchor=(0.5, -0.01),
     )
 
-    fig.suptitle(
-        f"VISTA Protocol: {report.method_name}",
-        fontweight="bold", fontsize="large",
-    )
     fig.tight_layout()
-    fig.subplots_adjust(bottom=0.06, top=0.93)
+    fig.subplots_adjust(bottom=0.04)
 
     return fig

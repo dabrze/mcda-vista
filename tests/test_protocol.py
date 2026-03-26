@@ -6,6 +6,7 @@ import numpy as np
 from mcda_vista.core import VistaResult, generate_vista
 from mcda_vista.protocol import (
     CheckResult,
+    SensitivityRow,
     _count_transitions,
     check_diagonal_preference,
     check_dominance,
@@ -350,7 +351,66 @@ class TestPlotProtocolReport:
         report = run_protocol(
             _dummy_saw, resolution=11, progress=False, delta=0.10
         )
-        fig = plot_protocol_report(report, figsize=(12, 8))
+        fig = plot_protocol_report(report, figsize=(20, 10))
+        assert fig is not None
+        plt_module = __import__("matplotlib.pyplot", fromlist=["pyplot"])
+        plt_module.close(fig)
+
+    def test_grid_layout_rows_and_cols(self):
+        import matplotlib
+
+        matplotlib.use("Agg")
+
+        report = run_protocol(
+            _dummy_saw, resolution=11, progress=False, delta=0.10
+        )
+        fig = plot_protocol_report(report)
+        axes = fig.get_axes()
+        # Row 1 (5 checks) + Row 2 (5 third-alt) = 10 axes total
+        # Some may be hidden, but all should exist
+        visible = [ax for ax in axes if ax.get_visible()]
+        assert len(visible) >= 5  # at least the 5 checks
+        plt_module = __import__("matplotlib.pyplot", fromlist=["pyplot"])
+        plt_module.close(fig)
+
+    def test_with_extra_rows(self):
+        import matplotlib
+
+        matplotlib.use("Agg")
+
+        report = run_protocol(
+            _dummy_saw, resolution=11, progress=False, delta=0.10
+        )
+        # Add an extra sensitivity row
+        baseline = report.baseline
+        report.extra_rows.append(
+            SensitivityRow(
+                title="Test sensitivity",
+                labels=["a=1", "a=2", "a=3"],
+                results=[baseline, baseline, baseline],
+            )
+        )
+        fig = plot_protocol_report(report)
+        assert fig is not None
+        plt_module = __import__("matplotlib.pyplot", fromlist=["pyplot"])
+        plt_module.close(fig)
+
+    def test_with_extra_weights(self):
+        import matplotlib
+
+        matplotlib.use("Agg")
+
+        report = run_protocol(
+            _dummy_saw,
+            resolution=11,
+            extra_weights=[[0.25, 0.75], [0.75, 0.25]],
+            progress=False,
+            delta=0.10,
+        )
+        assert len(report.extra_rows) == 1
+        assert report.extra_rows[0].title == "Criteria weights"
+        assert len(report.extra_rows[0].results) == 2
+        fig = plot_protocol_report(report)
         assert fig is not None
         plt_module = __import__("matplotlib.pyplot", fromlist=["pyplot"])
         plt_module.close(fig)

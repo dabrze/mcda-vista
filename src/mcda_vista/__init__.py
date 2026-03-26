@@ -1,12 +1,13 @@
 """VISTA — VISualization of relation Topologies of Alternatives."""
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 from mcda_vista.core import VistaGenerator, VistaResult, generate_vista
 from mcda_vista.plotting import plot_vista, plot_vista_comparison, plot_vista_grid
 from mcda_vista.protocol import (
     CheckResult,
     ProtocolReport,
+    SensitivityRow,
     plot_protocol_report,
     run_protocol,
 )
@@ -22,6 +23,7 @@ __all__ = [
     "ProtocolReport",
     "Relation",
     "run_protocol",
+    "SensitivityRow",
     "VistaGenerator",
     "VistaResult",
 ]

@@ -6,6 +6,7 @@ pyproject.toml
 docs/VISTA_overview.png
 docs/parameters_plot.png
 docs/protocol_report.png
+docs/topsis_vista.png
 experiments/README.md
 experiments/__init__.py
 experiments/export_fuzzy_copras_protocol.py
