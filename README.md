@@ -41,7 +41,7 @@ pip install .[app]
 For development (linting, type-checking, tests):
 
 ```bash
-pip install -e ".[dev]"
+pip install -e .[dev]
 ```
 
 ---

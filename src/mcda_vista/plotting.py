@@ -143,8 +143,8 @@ def _draw_vista_on_ax(
             marker="^",
             markersize=5,
             markerfacecolor="none",
-            markeredgecolor="#555555",
-            markeredgewidth=0.8,
+            markeredgecolor="#FFFFFF",
+            markeredgewidth=1.2,
             zorder=5,
         )
 
@@ -171,10 +171,7 @@ def _shared_legend_handles() -> list[mpatches.Patch]:
     Always returns all four entries so the legend is stable even when some
     categories are absent from a particular plot.
     """
-    return [
-        mpatches.Patch(color=rel.color, label=rel.label)
-        for rel in _LEGEND_ORDER
-    ]
+    return [mpatches.Patch(color=rel.color, label=rel.label) for rel in _LEGEND_ORDER]
 
 
 def _finalize_figure(fig: Figure, *, title: str | None, show_legend: bool) -> None:
@@ -379,7 +376,10 @@ def plot_vista_comparison(
     actual_ncols = min(n, ncols)
 
     if figsize is None:
-        figsize = (COMPARISON_FIGURE_SCALE * actual_ncols, COMPARISON_FIGURE_SCALE * nrows)
+        figsize = (
+            COMPARISON_FIGURE_SCALE * actual_ncols,
+            COMPARISON_FIGURE_SCALE * nrows,
+        )
 
     fig, axes = plt.subplots(nrows, actual_ncols, figsize=figsize, squeeze=False)
 

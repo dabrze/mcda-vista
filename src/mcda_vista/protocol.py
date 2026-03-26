@@ -808,8 +808,8 @@ def _annotate_radial(ax: Axes, check: CheckResult, result: VistaResult) -> None:
         deg = float(np.degrees(angle))
         is_violating = any(abs(deg - v) < 1.0 for v in violating)
         color = "#cd202c" if is_violating else "#555555"
-        alpha = 0.5 if is_violating else 0.15
-        lw = 0.8 if is_violating else 0.3
+        alpha = 0.5 if is_violating else 0.5
+        lw = 2 if is_violating else 1
 
         dx = np.cos(angle) * 1.5
         dy = np.sin(angle) * 1.5
