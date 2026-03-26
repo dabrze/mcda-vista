@@ -145,6 +145,7 @@ def generate_values_from_01(
     ValueError
         If *K* < 2 or the form code is unrecognised.
     """
+    K = int(K)
     if K < 2:
         raise ValueError(f"K must be >= 2, got {K}.")
 

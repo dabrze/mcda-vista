@@ -59,12 +59,16 @@ def _render_method_params(
                 key=key,
             )
         elif "min" in spec and "max" in spec:
+            raw = [spec["min"], spec["max"], spec.get("step", 0.01),
+                   spec.get("default", defaults.get(pname, spec["min"]))]
+            use_int = all(isinstance(v, int) or (isinstance(v, float) and v == int(v)) for v in raw)
+            cast = int if use_int else float
             params[pname] = st.slider(
                 label,
-                min_value=float(spec["min"]),
-                max_value=float(spec["max"]),
-                value=float(spec.get("default", defaults.get(pname, spec["min"]))),
-                step=float(spec.get("step", 0.01)),
+                min_value=cast(spec["min"]),
+                max_value=cast(spec["max"]),
+                value=cast(spec.get("default", defaults.get(pname, spec["min"]))),
+                step=cast(spec.get("step", 1 if use_int else 0.01)),
                 key=key,
             )
         else:
