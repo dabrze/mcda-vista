@@ -165,8 +165,35 @@ See [`notebooks/12_protocol_check.ipynb`](notebooks/12_protocol_check.ipynb) for
 
 ## VISTA Grid
 
+Use `plot_vista_grid` to compare multiple methods in a single faceted figure.
+The example below contrasts different PROMETHEE I function types side by side:
 
+```python
+from mcda_vista import generate_vista
+from mcda_vista.plotting import plot_vista_grid
 
+weights = [[0.25, 0.50], [0.50, 0.50], [0.50, 0.25]]
+promethee_types = ["t1", "t2", "t3", "t4"]
+
+results = [
+  [
+    generate_vista("promethee_i", resolution=101, weights=w, f=ptype, q=0.05, p=0.20)
+    for ptype in promethee_types
+  ]
+  for w in weights
+]
+
+fig = plot_vista_grid(
+  results,
+  row_labels=[f"w={w}" for w in weights],
+  col_labels=["PROMETHEE I (t1)", "PROMETHEE I (t2)", "PROMETHEE I (t3)","PROMETHEE I (t4)"],
+  title="Comparison of PROMETHEE I versions",
+  point_size=1.5,
+)
+fig.savefig("vista_grid_promethee.png", dpi=300)
+```
+
+![VISTA grid for PROMETHEE I](docs/vista_grid_promethee.png)
 ---
 
 ## Experiments
