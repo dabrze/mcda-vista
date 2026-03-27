@@ -203,7 +203,7 @@ Reproducible experiments are configured via YAML files stored in
 ranges, resolution, and output paths. To run an experiment:
 
 ```bash
-python -m mcda_vista.experiments.run experiments/configs/my_experiment.yaml
+python experiments/run_experiments.py experiments/configs/my_config.yaml --plot
 ```
 
 Results (CSV grids + metadata JSON) are written to the configured output

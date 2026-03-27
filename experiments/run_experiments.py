@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 import time
 from itertools import product as iter_product
 from pathlib import Path
@@ -26,6 +25,7 @@ from mcda_vista.io import save_vista
 # ---------------------------------------------------------------------------
 # Config loading
 # ---------------------------------------------------------------------------
+
 
 def load_config(path: str | Path) -> dict[str, Any]:
     """Load and validate a YAML experiment configuration."""
@@ -43,12 +43,15 @@ def load_config(path: str | Path) -> dict[str, Any]:
 # Job generation helpers
 # ---------------------------------------------------------------------------
 
+
 def _tag(params: dict[str, Any]) -> str:
     """Build a compact, filesystem-safe tag from parameters."""
     parts: list[str] = []
     for key, val in sorted(params.items()):
         if isinstance(val, (list, tuple)):
-            val_str = "_".join(f"{v:g}" if isinstance(v, float) else str(v) for v in val)
+            val_str = "_".join(
+                f"{v:g}" if isinstance(v, float) else str(v) for v in val
+            )
         elif isinstance(val, float):
             val_str = f"{val:g}"
         else:
@@ -104,8 +107,10 @@ def _jobs_sweep(
             # Override the swept dimension
             job[sweep_key] = sv
 
-            sv_tag = "none" if sv is None else "_".join(
-                f"{v:g}" if isinstance(v, float) else str(v) for v in sv
+            sv_tag = (
+                "none"
+                if sv is None
+                else "_".join(f"{v:g}" if isinstance(v, float) else str(v) for v in sv)
             )
             job["label"] = f"{method_name}__{sweep_key}={sv_tag}"
             jobs.append(job)
@@ -161,6 +166,7 @@ def build_jobs(cfg: dict[str, Any]) -> list[dict[str, Any]]:
 # ---------------------------------------------------------------------------
 # Execution
 # ---------------------------------------------------------------------------
+
 
 def _run_single(
     job: dict[str, Any],
@@ -224,7 +230,7 @@ def _save_plot(result: Any, out_path: Path) -> None:
         print("  [warn] plotting unavailable (matplotlib not installed)")
         return
 
-    fig = plot_vista(result, title=result.method_name)
+    fig = plot_vista(result, title=result.method_name, point_size=7)
     png_path = out_path.parent / f"{out_path.name}.png"
     fig.savefig(str(png_path), dpi=150, bbox_inches="tight")
     import matplotlib.pyplot as plt
@@ -276,9 +282,7 @@ def run_experiment(
     if dry_run:
         for i, job in enumerate(jobs, 1):
             print(f"  [{i:3d}] {job['label']}")
-            params_str = ", ".join(
-                f"{k}={v}" for k, v in job["method_params"].items()
-            )
+            params_str = ", ".join(f"{k}={v}" for k, v in job["method_params"].items())
             if params_str:
                 print(f"        params: {params_str}")
         print(f"\n  Total: {len(jobs)} job(s) — dry run, nothing generated.")
@@ -317,6 +321,7 @@ def run_experiment(
 # ---------------------------------------------------------------------------
 # CLI entry-point
 # ---------------------------------------------------------------------------
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(
