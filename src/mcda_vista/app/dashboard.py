@@ -9,97 +9,16 @@ Launch with::
 
 from __future__ import annotations
 
-import io
-import time
-from typing import Any
-
-import matplotlib.pyplot as plt
-import numpy as np
 import streamlit as st
 
-from mcda_vista._constants import POINT_SIZE_BASE, POINT_SIZE_DIVISOR, POINT_SIZE_MIN
-from mcda_vista.core import VistaResult, generate_vista
 from mcda_vista.methods import get_method, list_methods
-from mcda_vista.methods.base import MethodAdapter
-from mcda_vista.plotting import plot_vista, plot_vista_comparison
-from mcda_vista.relation import Relation
 
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-def _hashable_params(**kwargs: object) -> tuple[tuple[str, object], ...]:
-    """Convert keyword arguments to a hashable, sorted tuple of pairs."""
-    return tuple(sorted(kwargs.items()))
-
-
-def _render_method_params(
-    adapter: MethodAdapter,
-    key_prefix: str = "",
-) -> dict[str, Any]:
-    """Auto-generate sidebar widgets from a method's ``param_space()``."""
-    space = adapter.param_space()
-    defaults = adapter.default_params()
-    params: dict[str, Any] = {}
-
-    if not space:
-        st.caption("_No tuneable parameters for this method._")
-        return params
-
-    for pname, spec in space.items():
-        label = spec.get("label", pname)
-        key = f"{key_prefix}{pname}"
-
-        if "choices" in spec:
-            params[pname] = st.selectbox(
-                label,
-                options=spec["choices"],
-                index=spec["choices"].index(spec.get("default", spec["choices"][0])),
-                key=key,
-            )
-        elif "min" in spec and "max" in spec:
-            raw = [spec["min"], spec["max"], spec.get("step", 0.01),
-                   spec.get("default", defaults.get(pname, spec["min"]))]
-            use_int = all(isinstance(v, int) or (isinstance(v, float) and v == int(v)) for v in raw)
-            cast = int if use_int else float
-            params[pname] = st.slider(
-                label,
-                min_value=cast(spec["min"]),
-                max_value=cast(spec["max"]),
-                value=cast(spec.get("default", defaults.get(pname, spec["min"]))),
-                step=cast(spec.get("step", 1 if use_int else 0.01)),
-                key=key,
-            )
-        else:
-            params[pname] = st.number_input(
-                label,
-                value=float(spec.get("default", defaults.get(pname, 0.0))),
-                key=key,
-            )
-
-    return params
-
-
-def _fig_to_png_bytes(fig: plt.Figure) -> bytes:
-    """Render a Matplotlib figure to PNG bytes."""
-    buf = io.BytesIO()
-    fig.savefig(buf, format="png", dpi=200, bbox_inches="tight")
-    buf.seek(0)
-    return buf.getvalue()
-
-
-def _result_to_csv(result: VistaResult) -> str:
-    """Convert a VistaResult to CSV text."""
-    header_parts = [
-        f"c{i + 1}" for i in range(result.grid.shape[1])
-    ]
-    header_parts.append("relation")
-    lines = [",".join(header_parts)]
-    for row, rel in zip(result.grid, result.relations):
-        vals = ",".join(f"{v:.6f}" for v in row)
-        lines.append(f"{vals},{int(rel)}")
-    return "\n".join(lines)
+from mcda_vista.app._grid import render_grid
+from mcda_vista.app._helpers import auto_point_size, render_method_params
+from mcda_vista.app._pair import render_pair
+from mcda_vista.app._protocol import render_protocol
+from mcda_vista.app._single import render_single
+from mcda_vista.app._style import inject_compact_css
 
 
 # ---------------------------------------------------------------------------
@@ -109,21 +28,21 @@ def _result_to_csv(result: VistaResult) -> str:
 def main() -> None:
     st.set_page_config(
         page_title="VISTA Dashboard",
-        page_icon="🔍",
         layout="wide",
     )
 
-    st.title("🔍 VISTA — VISualization of relation Topologies of Alternatives")
+    inject_compact_css()
+
+    st.markdown("### VISTA — VISualization of relation Topologies of Alternatives")
 
     # ------------------------------------------------------------------
-    # Sidebar
+    # Sidebar — shared controls
     # ------------------------------------------------------------------
     available_methods = list_methods()
 
     with st.sidebar:
-        st.header("⚙️ Configuration")
+        st.header("Configuration")
 
-        # --- Method selector ---
         st.subheader("Method")
         method_name = st.selectbox(
             "MCDA method",
@@ -133,7 +52,6 @@ def main() -> None:
 
         adapter = get_method(method_name)
 
-        # --- Resolution ---
         st.subheader("Grid")
         resolution = st.slider(
             "Resolution (per axis)",
@@ -144,22 +62,29 @@ def main() -> None:
             help="Higher values give finer plots but take longer to compute.",
         )
 
-        # --- Reference point ---
-        st.subheader("📍 Reference point")
+        auto_ps = auto_point_size(resolution)
+        point_size = st.slider(
+            "Point size",
+            min_value=0.1,
+            max_value=20.0,
+            value=auto_ps,
+            step=0.1,
+            help="Marker area for scatter points. Auto-derived from resolution by default.",
+            key="point_size",
+        )
+
+        st.subheader("Reference point")
         ref_x = st.slider("x (criterion 1)", 0.0, 1.0, 0.5, 0.01, key="ref_x")
         ref_y = st.slider("y (criterion 2)", 0.0, 1.0, 0.5, 0.01, key="ref_y")
 
-        # --- Weights ---
-        st.subheader("⚖️ Weights")
-        w1 = st.number_input("w₁", min_value=0.01, value=1.0, step=0.1, key="w1")
-        w2 = st.number_input("w₂", min_value=0.01, value=1.0, step=0.1, key="w2")
+        st.subheader("Weights")
+        w1 = st.number_input("w\u2081", min_value=0.01, value=1.0, step=0.1, key="w1")
+        w2 = st.number_input("w\u2082", min_value=0.01, value=1.0, step=0.1, key="w2")
 
-        # --- Method-specific parameters ---
-        st.subheader(f"🔧 {adapter.display_name} parameters")
-        method_params = _render_method_params(adapter, key_prefix="mp_")
+        st.subheader(f"{adapter.display_name} parameters")
+        method_params = render_method_params(adapter, key_prefix="mp_")
 
-        # --- Third alternative ---
-        st.subheader("🔺 Third alternative")
+        st.subheader("Third alternative")
         use_third = st.checkbox("Enable third alternative", key="use_third")
         third_alt: list[float] | None = None
         if use_third:
@@ -167,151 +92,56 @@ def main() -> None:
             t_y = st.slider("Third y", 0.0, 1.0, 0.7, 0.01, key="third_y")
             third_alt = [t_x, t_y]
 
-        # --- Comparison mode ---
-        st.divider()
-        st.subheader("📊 Comparison mode")
-        compare = st.checkbox("Compare multiple methods", key="compare")
-        compare_methods: list[str] = []
-        if compare:
-            compare_methods = st.multiselect(
-                "Select methods to compare",
-                options=available_methods,
-                default=[method_name],
-                key="compare_methods",
-            )
-
     # ------------------------------------------------------------------
-    # Generate VISTA
+    # Shared derived values
     # ------------------------------------------------------------------
     reference = [ref_x, ref_y]
     weights = [w1, w2]
 
-    if not compare:
-        # ---------- Single-method view ----------
-        t0 = time.perf_counter()
-        result = generate_vista(
-            method=method_name,
+    # ------------------------------------------------------------------
+    # View tabs
+    # ------------------------------------------------------------------
+    tab_single, tab_pair, tab_grid, tab_protocol = st.tabs(
+        ["Single", "Pair", "Grid", "Protocol"]
+    )
+
+    with tab_single:
+        render_single(
+            method_name=method_name,
             resolution=resolution,
             reference=reference,
             weights=weights,
-            n_criteria=2,
-            third_alternative=third_alt,
-            progress=False,
-            **method_params,
-        )
-        elapsed = time.perf_counter() - t0
-
-        fig = plot_vista(
-            result,
-            title=f"{adapter.display_name} VISTA",
-            point_size=max(POINT_SIZE_MIN, POINT_SIZE_BASE / (resolution / POINT_SIZE_DIVISOR)),
-        )
-        plt.tight_layout()
-
-        # Pre-render PNG for download before closing the figure
-        png_bytes = _fig_to_png_bytes(fig)
-
-        # ---- Display ----
-        col_plot, col_info = st.columns([3, 1])
-
-        with col_plot:
-            st.pyplot(fig, use_container_width=True)
-            plt.close(fig)
-
-        with col_info:
-            st.subheader("ℹ️ Info")
-            st.markdown(f"**Method:** {adapter.display_name}")
-            st.markdown(f"**Resolution:** {resolution}×{resolution} = {resolution**2:,} pts")
-            st.markdown(f"**Reference:** ({ref_x:.2f}, {ref_y:.2f})")
-            st.markdown(f"**Weights:** ({w1:.2f}, {w2:.2f})")
-            if third_alt:
-                st.markdown(f"**Third alt:** ({third_alt[0]:.2f}, {third_alt[1]:.2f})")
-            if method_params:
-                st.markdown("**Parameters:**")
-                for k, v in method_params.items():
-                    st.markdown(f"- `{k}` = {v}")
-            st.markdown(f"**Compute time:** {elapsed:.3f} s")
-
-            # Relation distribution
-            st.subheader("📈 Distribution")
-            for rel in Relation:
-                count = int(np.sum(result.relations == rel.value))
-                if count > 0:
-                    pct = count / len(result.relations) * 100
-                    st.markdown(
-                        f"<span style='color:{rel.color}'>■</span> "
-                        f"**{rel.label}**: {count:,} ({pct:.1f}%)",
-                        unsafe_allow_html=True,
-                    )
-
-        # ---- Downloads ----
-        st.divider()
-        dl_col1, dl_col2, _ = st.columns([1, 1, 3])
-        with dl_col1:
-            st.download_button(
-                "📥 Download PNG",
-                data=png_bytes,
-                file_name=f"vista_{method_name}.png",
-                mime="image/png",
-            )
-        with dl_col2:
-            st.download_button(
-                "📥 Download CSV",
-                data=_result_to_csv(result),
-                file_name=f"vista_{method_name}.csv",
-                mime="text/csv",
-            )
-
-    else:
-        # ---------- Comparison view ----------
-        if len(compare_methods) == 0:
-            st.info("Select at least one method in the sidebar to compare.")
-            return
-
-        st.subheader(f"Comparing {len(compare_methods)} methods")
-
-        results: list[VistaResult] = []
-        progress_bar = st.progress(0, text="Generating VISTAs…")
-        for i, mname in enumerate(compare_methods):
-            m_adapter = get_method(mname)
-            m_params = m_adapter.default_params()
-            result = generate_vista(
-                method=mname,
-                resolution=resolution,
-                reference=reference,
-                weights=weights,
-                n_criteria=2,
-                third_alternative=third_alt,
-                progress=False,
-                **m_params,
-            )
-            results.append(result)
-            progress_bar.progress(
-                (i + 1) / len(compare_methods),
-                text=f"Generated {m_adapter.display_name} ({i + 1}/{len(compare_methods)})",
-            )
-        progress_bar.empty()
-
-        ncols = min(4, len(results))
-        fig = plot_vista_comparison(
-            results,
-            ncols=ncols,
-            title="VISTA Method Comparison",
-            point_size=max(POINT_SIZE_MIN, POINT_SIZE_BASE / (resolution / POINT_SIZE_DIVISOR)),
+            third_alt=third_alt,
+            method_params=method_params,
+            point_size=point_size,
         )
 
-        st.pyplot(fig, use_container_width=True)
+    with tab_pair:
+        render_pair(
+            resolution=resolution,
+            reference=reference,
+            weights=weights,
+            third_alt=third_alt,
+            point_size=point_size,
+        )
 
-        # Render PNG bytes before closing the figure
-        comparison_png = _fig_to_png_bytes(fig)
-        plt.close(fig)
+    with tab_grid:
+        render_grid(
+            resolution=resolution,
+            reference=reference,
+            weights=weights,
+            third_alt=third_alt,
+            method_name=method_name,
+            method_params=method_params,
+            point_size=point_size,
+        )
 
-        # Download comparison PNG
-        st.download_button(
-            "📥 Download comparison PNG",
-            data=comparison_png,
-            file_name="vista_comparison.png",
-            mime="image/png",
+    with tab_protocol:
+        render_protocol(
+            method_name=method_name,
+            resolution=resolution,
+            method_params=method_params,
+            point_size=point_size,
         )
 
 

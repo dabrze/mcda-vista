@@ -214,13 +214,13 @@ directory and can be reloaded with `load_vista()`.
 ## Dashboard
 
 The optional Streamlit dashboard provides an interactive UI for exploring
-VISTA maps in real time:
+VISTA maps interactively. Launch it with:
 
 ```bash
-mcda-vista-app
+streamlit run src\mcda_vista\app\dashboard.py
 ```
 
-<!-- ![Dashboard screenshot](docs/dashboard_screenshot.png) -->
+![Dashboard screenshot](docs/dashboard_screenshot.png)
 
 Select a method, adjust parameters with sliders, and watch the VISTA map
 update live. Install the dashboard extra to enable it:
