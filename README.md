@@ -95,12 +95,13 @@ from mcda_vista.methods import list_methods
 print(list_methods())
 ```
 
+If a pyDecision method is not available by default, you can add by creating an adapter with `register_method()` or use a custom callable (see below).
+
 ---
 
 ## Custom Methods
 
-You can pass any callable that accepts a dataset, weights, and keyword
-parameters and returns a `Relation`:
+You can pass any callable that accepts a dataset, weights, and keyword parameters and returns a `Relation`:
 
 ```python
 from mcda_vista import generate_vista, plot_vista, Relation
