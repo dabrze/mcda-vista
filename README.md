@@ -158,8 +158,12 @@ VISTA Protocol Report: topsis
 ```
 
 The protocol uses equal weights and the midpoint as reference by default.
-Optionally pass `extra_weights` to test weight sensitivity.
+Optionally pass `extra_weights` to test weight sensitivity (e.g., `extra_weights=[[0.25, 0.75], [0.25, 0.50], [0.50, 0.50], [0.50, 0.25], [0.75, 0.25]]`).
 See [`notebooks/12_protocol_check.ipynb`](notebooks/12_protocol_check.ipynb) for a full walkthrough with Fuzzy TOPSIS.
+
+---
+
+## VISTA Grid
 
 
 
@@ -200,26 +204,6 @@ pip install .[app]
 
 ---
 
-## API Overview
-
-| Module                  | Purpose                                                         |
-| ----------------------- | --------------------------------------------------------------- |
-| `mcda_vista.core`       | `generate_vista()`, `VistaGenerator`, `VistaResult`             |
-| `mcda_vista.methods`    | Method registry — `get_method()`, `list_methods()`              |
-| `mcda_vista.relation`   | `Relation` enum (Better, Worse, Indifferent, Incomparable)      |
-| `mcda_vista.plotting`   | `plot_vista()`, `plot_vista_grid()`, `plot_vista_comparison()`  |
-| `mcda_vista.protocol`   | `run_protocol()`, `plot_protocol_report()`, six check functions |
-| `mcda_vista.io`         | `save_vista()`, `load_vista()`                                  |
-| `mcda_vista.converters` | Score-to-relation conversion utilities                          |
-| `mcda_vista.datasets`   | Dataset helpers for grid construction                           |
-
----
-
-## Example VISTA Grid
-
-![Parameter sweep](docs/parameters_plot.png)
-
----
 
 ## License
 
