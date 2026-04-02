@@ -65,7 +65,8 @@ the ranking method (in this case TOPSIS) at every point, and returns a `VistaRes
 renders it as a scatter plot coloured by the relation type - adjust the `point_size` parameter to the
 resolution and size of the image.
 
-You will practical examples of how to use vistas though the library in the [notebooks](notebooks) folders. A portion ofthat show common workflows step by step.
+You will find practical examples of how to use vistas in the [notebooks](notebooks) folders. A portion of that functionality is highlighted below.
+
 ---
 
 
