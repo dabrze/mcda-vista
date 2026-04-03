@@ -100,7 +100,7 @@ from mcda_vista.methods import list_methods
 print(list_methods())
 ```
 
-If a pyDecision method is not available by default, you can add by creating an adapter with `register_method()` or use a custom callable (see below).
+If a pyDecision method is not available by default, you can add it by creating an adapter with `register_method()` or use a custom callable (see below).
 
 ---
 
