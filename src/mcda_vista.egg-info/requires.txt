@@ -1,8 +1,8 @@
-numpy
-pyDecision
-matplotlib
-pyyaml
-tqdm
+numpy>=1.22
+pyDecision>=4.0
+matplotlib>=3.5
+pyyaml>=6.0
+tqdm>=4.60
 
 [app]
 streamlit>=1.20

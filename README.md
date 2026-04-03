@@ -26,22 +26,24 @@ The resulting colour-coded map reveals decision boundaries and structural differ
 
 ## Installation
 
-Download the source code and install the package with pip:
+Install directly from PyPI:
 
 ```bash
-pip install .
+pip install mcda-vista
 ```
 
 To include the interactive Streamlit dashboard:
 
 ```bash
-pip install .[app]
+pip install mcda-vista[app]
 ```
 
 For development (linting, type-checking, tests):
 
 ```bash
-pip install -e .[dev]
+git clone https://github.com/dabrze/mcda-vista.git
+cd mcda-vista
+pip install -e ".[dev]"
 ```
 
 ---
