@@ -1,6 +1,7 @@
 # VISTA — VISualization of relation Topologies of Alternatives
 
-[![CI](https://github.com/dabrze/mcda-vista/actions/workflows/ci.yml/badge.svg)](https://github.com/dabrze/mcda-vista/actions/workflows/ci.yml)
+<!--
+[![CI](https://github.com/dabrze/mcda-vista/actions/workflows/ci.yml/badge.svg)](https://github.com/dabrze/mcda-vista/actions/workflows/ci.yml)-->
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
@@ -71,9 +72,10 @@ fig = plot_vista(result, point_size=7)
 fig.savefig("topsis_vista.png", dpi=300)
 ```
 
-<a target="_blank" rel="noopener noreferrer" href="/docs/topsis_vista.png">
+![Example vista](docs/topsis_vista.png)
+<!--a target="_blank" rel="noopener noreferrer" href="/docs/topsis_vista.png">
     <img src="/docs/topsis_vista.png" alt="Example vista" width=500">
-</a>
+</a-->
 
 `generate_vista` sweeps a 101 × 101 grid of alternatives over the criterion space, evaluates
 the ranking method (in this case TOPSIS) at every point, and returns a `VistaResult` dataclass. `plot_vista`
