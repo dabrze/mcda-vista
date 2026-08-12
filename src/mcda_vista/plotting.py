@@ -6,7 +6,7 @@ matching the original colour scheme and layout conventions.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Sequence, cast
+from typing import TYPE_CHECKING, Any, Sequence, cast
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -60,12 +60,29 @@ def vista_colormap() -> dict[int, str]:
 
 # ── Internal drawing helper ──────────────────────────────────────────────
 
+# Marker styles available for ``extra_alternatives`` (background sets).
+_EXTRA_MARKER_STYLES: dict[str, dict[str, Any]] = {
+    "diamond": {
+        "marker": "D",
+        "markersize": 4,
+        "markeredgecolor": "#555555",
+        "markeredgewidth": 0.8,
+    },
+    "triangle": {
+        "marker": "^",
+        "markersize": 5,
+        "markeredgecolor": "#FFFFFF",
+        "markeredgewidth": 1.2,
+    },
+}
+
 
 def _draw_vista_on_ax(
     ax: Axes,
     result: VistaResult,
     point_size: float | None = None,
     show_reference: bool = True,
+    extra_marker: str = "diamond",
 ) -> None:
     """Render a single VISTA scatter plot onto *ax*.
 
@@ -81,12 +98,24 @@ def _draw_vista_on_ax(
     show_reference : bool
         If *True*, draw dashed crosshair lines and an open-circle marker
         at the reference point.
+    extra_marker : {"diamond", "triangle"}
+        Style for ``result.extra_alternatives``.  ``"diamond"`` (default)
+        draws small grey diamonds; ``"triangle"`` draws white triangles
+        matching the third-alternative marker, which reads better when a
+        whole background set sits on top of the coloured regions.
     """
+    if extra_marker not in _EXTRA_MARKER_STYLES:
+        raise ValueError(
+            f"extra_marker must be one of {sorted(_EXTRA_MARKER_STYLES)}, "
+            f"got {extra_marker!r}"
+        )
     if point_size is None:
         point_size = _auto_point_size(result.resolution)
     grid = result.grid
     relations = result.relations
     ref = result.reference
+    free_indices = tuple(result.metadata.get("free_indices", (0, 1)))
+    x_index, y_index = free_indices
 
     # Plot each relation category in legend order so the z-order is
     # consistent and the legend entries are predictable.
@@ -95,8 +124,8 @@ def _draw_vista_on_ax(
         if not np.any(mask):
             continue
         ax.scatter(
-            grid[mask, 0],
-            grid[mask, 1],
+            grid[mask, x_index],
+            grid[mask, y_index],
             c=rel.color,
             s=point_size,
             marker="s",
@@ -109,8 +138,8 @@ def _draw_vista_on_ax(
     err_mask = relations == Relation.ERROR.value
     if np.any(err_mask):
         ax.scatter(
-            grid[err_mask, 0],
-            grid[err_mask, 1],
+            grid[err_mask, x_index],
+            grid[err_mask, y_index],
             c=Relation.ERROR.color,
             s=point_size,
             marker="s",
@@ -121,11 +150,11 @@ def _draw_vista_on_ax(
 
     # Reference point decoration.
     if show_reference:
-        ax.axvline(ref[0], linestyle="--", color="#555555", linewidth=0.5)
-        ax.axhline(ref[1], linestyle="--", color="#555555", linewidth=0.5)
+        ax.axvline(ref[x_index], linestyle="--", color="#555555", linewidth=0.5)
+        ax.axhline(ref[y_index], linestyle="--", color="#555555", linewidth=0.5)
         ax.plot(
-            ref[0],
-            ref[1],
+            ref[x_index],
+            ref[y_index],
             marker="o",
             markersize=5,
             markerfacecolor="none",
@@ -138,8 +167,8 @@ def _draw_vista_on_ax(
     if result.third_alternative is not None:
         alt = result.third_alternative
         ax.plot(
-            alt[0],
-            alt[1],
+            alt[x_index],
+            alt[y_index],
             marker="^",
             markersize=5,
             markerfacecolor="none",
@@ -148,18 +177,16 @@ def _draw_vista_on_ax(
             zorder=5,
         )
 
-    # Optional extra alternatives (diamond markers).
+    # Optional extra alternatives.
     if result.extra_alternatives is not None:
+        style = _EXTRA_MARKER_STYLES[extra_marker]
         for row in result.extra_alternatives:
             ax.plot(
-                row[0],
-                row[1],
-                marker="D",
-                markersize=4,
+                row[x_index],
+                row[y_index],
                 markerfacecolor="none",
-                markeredgecolor="#555555",
-                markeredgewidth=0.8,
                 zorder=5,
+                **style,
             )
 
     ax.set_aspect("equal")
@@ -206,6 +233,7 @@ def plot_vista(
     show_reference: bool = True,
     show_legend: bool = True,
     point_size: float | None = None,
+    extra_marker: str = "diamond",
 ) -> Figure:
     """Plot a single VISTA result.
 
@@ -226,6 +254,8 @@ def plot_vista(
     point_size : float or None
         Marker area for scatter points.  Auto-computed from resolution
         when *None*.
+    extra_marker : {"diamond", "triangle"}
+        Marker style for background alternatives.
 
     Returns
     -------
@@ -237,7 +267,13 @@ def plot_vista(
     else:
         fig = cast(Figure, ax.get_figure())
 
-    _draw_vista_on_ax(ax, result, point_size=point_size, show_reference=show_reference)
+    _draw_vista_on_ax(
+        ax,
+        result,
+        point_size=point_size,
+        show_reference=show_reference,
+        extra_marker=extra_marker,
+    )
 
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
@@ -265,6 +301,7 @@ def plot_vista_grid(
     figsize: tuple[float, float] | None = None,
     show_legend: bool = True,
     point_size: float | None = None,
+    extra_marker: str = "diamond",
 ) -> Figure:
     """Create a grid of VISTA subplots (rows × columns).
 
@@ -288,6 +325,8 @@ def plot_vista_grid(
     point_size : float or None
         Marker area for scatter points.  Auto-computed from resolution
         when *None*.
+    extra_marker : {"diamond", "triangle"}
+        Marker style for background alternatives in every panel.
 
     Returns
     -------
@@ -316,7 +355,9 @@ def plot_vista_grid(
                 res = results[r][c]
 
             if res is not None:
-                _draw_vista_on_ax(ax, res, point_size=point_size)
+                _draw_vista_on_ax(
+                    ax, res, point_size=point_size, extra_marker=extra_marker
+                )
 
             # Column labels on top row.
             if r == 0:

@@ -8,7 +8,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from mcda_vista.methods.base import MethodAdapter, handle_pydecision_warnings
+from mcda_vista.methods.base import (
+    MethodAdapter,
+    handle_pydecision_warnings,
+    is_self_comparison,
+)
 
 if TYPE_CHECKING:
     pass
@@ -17,6 +21,7 @@ __all__ = [
     "MethodAdapter",
     "get_method",
     "handle_pydecision_warnings",
+    "is_self_comparison",
     "list_methods",
     "register_method",
 ]

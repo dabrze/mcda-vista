@@ -214,3 +214,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Low-resolution experiment check runs (results/ itself holds paper artifacts)
+results/smoke*/
+results/*_check/

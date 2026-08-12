@@ -7,6 +7,10 @@ engine can call any method without knowing its internals. The
 The :func:`handle_pydecision_warnings` decorator factors out the
 boilerplate "catch RuntimeWarning → return Relation.ERROR" pattern
 that is common to all pyDecision-backed adapters.
+
+:func:`is_self_comparison` supports the optional VISTA-side
+self-indifference override described in
+:meth:`mcda_vista.core.VistaGenerator.generate`.
 """
 
 from __future__ import annotations
@@ -19,7 +23,7 @@ import numpy as np
 
 from mcda_vista.relation import Relation
 
-__all__ = ["MethodAdapter", "handle_pydecision_warnings"]
+__all__ = ["MethodAdapter", "handle_pydecision_warnings", "is_self_comparison"]
 
 
 # ---------------------------------------------------------------------------
@@ -80,6 +84,34 @@ class MethodAdapter(Protocol):
             }
         """
         ...
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+def is_self_comparison(dataset: np.ndarray) -> bool:
+    """Return *True* when the test point coincides with the reference.
+
+    Row 0 of *dataset* is the reference and row 1 the test point, so an
+    exact match means the method is being asked to compare an
+    alternative with itself.  Several pyDecision methods are numerically
+    undefined in that situation — TOPSIS, for instance, places both rows
+    at the ideal *and* the anti-ideal solution, producing a ``0/0``
+    ratio that :func:`handle_pydecision_warnings` maps to
+    :attr:`Relation.ERROR`.
+
+    Parameters
+    ----------
+    dataset : np.ndarray, shape (m, n)
+        Decision matrix with the reference in row 0.
+
+    Returns
+    -------
+    bool
+    """
+    return bool(np.array_equal(dataset[0], dataset[1]))
 
 
 # ---------------------------------------------------------------------------
