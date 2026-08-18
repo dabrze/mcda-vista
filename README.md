@@ -249,7 +249,7 @@ If you use VISTA in your research, please cite:
 ```bibtex
 @article{vista,
   author  = {Susmaga, Robert and Szczech, Izabela and Brzezinski, Dariusz},
-  title   = {Visualization of Preferential Relations in Analyses of Multicriteria Ranking Methods},
+  title   = {A Visual Diagnostic Framework for Multicriteria Ranking Methods},
   note    = {In review},
   year    = {2026}
 }
