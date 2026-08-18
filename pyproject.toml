@@ -67,7 +67,8 @@ target-version = "py310"
 select = ["E", "F", "W"]
 
 [tool.mypy]
-python_version = "3.10"
+# No python_version pin: mypy must target >= 3.12 to parse modern numpy stubs (PEP 695).
+# 3.10 compatibility is covered by ruff target-version and the pytest matrix.
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false
